@@ -215,17 +215,17 @@ predicted_label = nnPredict(w1,w2,train_data)
 
 #find the accuracy on Training Dataset
 
-print '\n Training set Accuracy:' + str(100*np.mean((predicted_label == train_label).astype(float))) + '%'
+print('\n Training set Accuracy:' + str(100*np.mean((predicted_label == train_label).astype(float))) + '%')
 
 predicted_label = nnPredict(w1,w2,validation_data)
 
 #find the accuracy on Validation Dataset
 
-print '\n Validation set Accuracy:' + str(100*np.mean((predicted_label == validation_label).astype(float))) + '%'
+print('\n Validation set Accuracy:' + str(100*np.mean((predicted_label == validation_label).astype(float))) + '%')
 
 
 predicted_label = nnPredict(w1,w2,test_data)
 
 #find the accuracy on Validation Dataset
 
-print '\n Test set Accuracy:' + + str(100*np.mean((predicted_label == test_label).astype(float))) + '%'
+print('\n Test set Accuracy:' + + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
