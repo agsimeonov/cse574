@@ -64,5 +64,20 @@ for i in range(10):
     trainsize = trainsize + m.shape[0]
 print trainsize
 
+"""
+Pointers about splitting a matrix into two random parts
+"""
+# Assume we have a matrix (I will repurpose one of the trainx matrices from above)
+A = mat.get('train0')
+print A.shape
+
+# I want to break it into two random parts, one matrix with 1000 rows and second with the rest
+a = range(A.shape[0])
+aperm = np.random.permutation(a)
+A1 = A[aperm[0:1000],:]
+A2 = A[aperm[1000:],:]
+print A1.shape
+print A2.shape
+
 """ Display plots """
 plt.show()
