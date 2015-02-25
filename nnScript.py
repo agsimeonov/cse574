@@ -27,7 +27,7 @@ def sigmoid(z):
     """# Notice that z can be a scalar, a vector or a matrix
     # return the sigmoid of input z"""
     
-    return  #your code here
+    return 1.0 / (1.0 + np.exp(-1.0 * z))
     
     
 
