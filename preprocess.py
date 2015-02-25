@@ -94,7 +94,17 @@ def preprocess():
     print validation_label.shape
     print validation_data.shape
     print validation_label
-    
+
+   
+#    a = np.arange(6).reshape(2,3)
+#    print a
+#    aperm = np.random.permutation(a)
+#    print aperm
+#    a = a.astype(np.float32)
+#    a = a / 5.0
+#    print a
+#    a = 1.0 / (1.0 + np.exp(-1.0 * a))
+#    print a
     
     
 #    from random import shuffle
