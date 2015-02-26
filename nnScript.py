@@ -180,6 +180,52 @@ def nnObjFunction(params, *args):
     w2 = params[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
     obj_val = 0  
     
+    n_train = training_data.shape[0]
+
+
+    regularization_term = np.sum(w1 * w1) + np.sum(w2 * w2)
+    regularization_term = (lambdaval / (2 * n_train)) * regularization_term
+
+    (predicted_labels, hidden_outputs) = nnPredict(w1, w2, training_data)
+
+    real_output_vector = zeros((1, n_class))
+    predicted_output_vector = zeros((1, n_class))
+    obj_val = 0.0
+    for n in range(n_train):
+        real_output_vector[training_label[n]] = 1
+        predicted_output_vector[predicted_labels[n]] = 1
+	    
+        obj_val = obj_val + np.sum(predicted_output_vector * np.log(real_output_vector) + ((1 - predicted_output_vector) * np.log(1 - real_output_vector)))
+        real_output_vector[training_label[n]] = 0
+        predicted_output_vector[predicted_labels[n]] = 0
+
+    obj_val = -1 / n_train * obj_val
+    obj_val = obj_val + regularization_term
+
+    update_hidden_weights = zeros((n_hidden, n_input + 1)); 
+    for k in range(n_train): 
+        real_output_vector[training_label[k]] = 1
+        predicted_output_vector[predicted_labels[k]] = 1
+        for i in range(n_hidden):
+      	    gradient1 = np.sum((predicted_output_vector - real_output_vector) * w2[:, i])
+	    for j in range(n_input + 1):
+	        gradient2 = (1 - hidden_outputs[k, i]) * hidden_outputs[k, i] * training_data[k, j]
+	        update_hidden_weights[i, j] = update_hidden_weights[i, j] + gradient + gradient2
+	real_output_vector[training_label[k]] = 0
+	predicted_output_vector[predicted_labels[k]] = 0
+    w1 = (1 / n_train) * (update_hidden_weights + (lambdaval * w1)) 
+
+    update_output_weights = zeros((n_class, n_hidden + 1)); 
+    for k in range(n_train): 
+        real_output_vector[training_label[k]] = 1
+        predicted_output_vector[predicted_labels[k]] = 1
+        for i in range(n_class):
+            for j in range(n_hidden + 1):
+		gradient = (predicted_output_vector[i] - real_output_vector[i]) * hidden_outputs[k, j]
+		update_hidden_weights[i, j] = update_hidden_weights[i, j] + gradient 
+	real_output_vector[training_label[k]] = 0
+	predicted_output_vector[predicted_labels[k]] = 0
+    w2 = (1 / n_train) * (update_hidden_weights + (lambdaval * w2))
     #Your code here
     #
     #
@@ -191,8 +237,8 @@ def nnObjFunction(params, *args):
     
     #Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     #you would use code similar to the one below to create a flat array
-    #obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
-    obj_grad = np.array([])
+    obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
+    
     
     return (obj_val,obj_grad)
 
