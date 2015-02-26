@@ -3,6 +3,26 @@ from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
 
+def stack(mat, name, digits):
+    stack = None
+    for digit in digits:
+        key = name + str(digit)
+        if stack is None:
+            stack = mat.get(key)
+        else:
+            stack = np.concatenate((stack, mat.get(key)))
+    return stack
+
+def label(data, digits):
+    label = []
+    for i in range(data.shape[0]):
+        label.append(int(i/(data.shape[0]/len(digits))))
+    label = np.array(label)
+    return label[:,np.newaxis]
+
+def normalize(data):
+    data = data.astype(np.float32)
+    return data / 255
 
 def initializeWeights(n_in,n_out):
     """
@@ -64,12 +84,52 @@ def preprocess():
     
     
     #Your code here
-    train_data = np.array([])
-    train_label = np.array([])
-    validation_data = np.array([])
-    validation_label = np.array([])
-    test_data = np.array([])
-    test_label = np.array([])
+    TRAIN_NAME = 'train'
+    TEST_NAME = 'test'
+    DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    
+    # 1.1 Stack all training matrices into one 60000 x 784 matrix
+    train_data = stack(mat, TRAIN_NAME, DIGITS)
+    # 1.2 Do the same for test matrices
+    test_data = stack(mat, TEST_NAME, DIGITS)
+    
+    # 2.1 Create a 60000 length vector with true labels (digits) for each
+    # training example
+    train_label = label(train_data, DIGITS)
+    # 2.2 Same for test data
+    test_label = label(test_data, DIGITS)
+    
+    # 3 Normalize the training matrix and test matrix so that the values are
+    # between 0 and 1
+    train_data = normalize(train_data)
+    test_data = normalize(test_data)
+    
+    # 4 Randomly split the 60000 x 784 normalized matrix into two matrices:
+    # training matrix (50000 x 784) and validation matrix (10000 x 784). Make
+    # sure you split the true labels vector into two parts as well.
+    train = np.concatenate((train_label, train_data), 1)
+    train = np.random.permutation(train)
+    train = np.hsplit(train, [1])
+    train_label = train[0]
+    train_data = train[1]
+    train_label = np.split(train_label, [50000])
+    train_data = np.split(train_data, [50000])
+    validation_label = train_label[1]
+    validation_label = validation_label.astype(int)
+    validation_data = train_data[1]
+    train_label = train_label[0]
+    train_label = train_label.astype(int)
+    train_data = train_data[0]
+    
+    # 5 Feature selection
+    ranges = np.ptp(train_data, axis=0)
+    i = 0
+    delete_indexes = []
+    for x in ranges:
+        if x == 0.0:
+            delete_indexes.append(i)
+        i = i + 1
+    train_data = np.delete(train_data, delete_indexes, axis=1)
     
     return train_data, train_label, validation_data, validation_label, test_data, test_label
     
