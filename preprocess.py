@@ -66,12 +66,14 @@ def preprocess():
     # 1.2 Do the same for test matrices
     test_data = stack(mat, TEST_NAME, DIGITS)
     
-    # 2.1 Create a 60000 length vector with true labels (digits) for each training example
+    # 2.1 Create a 60000 length vector with true labels (digits) for each
+    # training example
     train_label = label(train_data, DIGITS)
     # 2.2 Same for test data
     test_label = label(test_data, DIGITS)
     
-    # 3 Normalize the training matrix and test matrix so that the values are between 0 and 1
+    # 3 Normalize the training matrix and test matrix so that the values are
+    # between 0 and 1
     train_data = normalize(train_data)
     test_data = normalize(test_data)
     
@@ -79,21 +81,48 @@ def preprocess():
     # training matrix (50000 x 784) and validation matrix (10000 x 784). Make
     # sure you split the true labels vector into two parts as well.
     train = np.concatenate((train_label, train_data), 1)
-    np.random.shuffle(train)
+    train = np.random.permutation(train)
     train = np.hsplit(train, [1])
     train_label = train[0]
     train_data = train[1]
     train_label = np.split(train_label, [50000])
     train_data = np.split(train_data, [50000])
     validation_label = train_label[1]
+    validation_label = validation_label.astype(int)
     validation_data = train_data[1]
     train_label = train_label[0]
+    train_label = train_label.astype(int)
     train_data = train_data[0]
-    print train_label.shape
-    print train_data.shape
-    print validation_label.shape
-    print validation_data.shape
-    print validation_label
+    
+    # 5 Feature selection
+    ranges = np.ptp(train_data, axis=0)
+    i = 0
+    delete_indexes = []
+    for x in ranges:
+        if x == 0.0:
+            delete_indexes.append(i)
+        i = i + 1
+    train_data = np.delete(train_data, delete_indexes, axis=1)
+
+#    print train_data.shape
+#
+#    a = np.arange(6).reshape(2,3)
+#    print np.ptp(a, axis=0)
+#    print np.ptp(a, axis=1)
+#    print a
+#    a = np.delete(a, [0], axis=1)
+#    print a
+
+#    a = np.arange(6).reshape(2,3)
+#    print a
+#    print np.ptp(a, axis=0)
+#    print np.ptp(a, axis=1)
+
+#    print train_label.shape
+#    print train_data.shape
+#    print validation_label.shape
+#    print validation_data.shape
+#    print type(validation_label)
 
    
 #    a = np.arange(6).reshape(2,3)
