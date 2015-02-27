@@ -121,7 +121,7 @@ def preprocess():
 def nnObjFunction(params, *args):
     """% nnObjFunction computes the value of objective function (negative log 
     %   likelihood error function with regularization) given the parameters 
-    %   of Neural Networks, thetraining data, their corresponding training 
+    %   of Neural Networks, the training data, their corresponding training 
     %   labels and lambda - regularization hyper-parameter.
 
     % Input:
@@ -209,11 +209,6 @@ def nnObjFunction(params, *args):
 	predicted_output_vector[predicted_labels[k]] = 0
     w2 = (1 / n_train) * (update_hidden_weights + (lambdaval * w2))
     #Your code here
-    #
-    #
-    #
-    #
-    #
     
     
     
@@ -244,10 +239,18 @@ def nnPredict(w1,w2,data):
     % Output: 
     % label: a column vector of predicted labels""" 
     
-    labels = np.array([])
-    #Your code here
+    labels = []
     
-    return labels
+    # For every example, compute the predicted digit
+    # and append it to the label list
+    for example in data:
+        output_hidden_nodes = sigmoid(np.sum(w1*example, axis=1))
+        output = sigmoid(np.sum(w2*output_hidden_nodes, axis=1))
+        predicted_digit = np.argmax(output)[0]
+        labels.append(predicted_digit)
+    
+    # Return an column vector    
+    return np.array(labels).reshape((data.shape[0],1))
     
 
 
@@ -263,7 +266,7 @@ train_data, train_label, validation_data,validation_label, test_data, test_label
 n_input = train_data.shape[1]; 
 
 # set the number of nodes in hidden unit (not including bias unit)
-n_hidden = 50;
+n_hidden = 4;
 				   
 # set the number of nodes in output unit
 n_class = 10;				   
