@@ -2,6 +2,8 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
+from numpy import integer
+
 
 def initializeWeights(n_in,n_out):
     """
@@ -113,6 +115,46 @@ def preprocess():
     test_data = np.delete(test_data, delete_indexes, axis=1)
     
     return train_data, train_label, validation_data, validation_label, test_data, test_label
+
+
+
+
+def nnPredictFull(w1,w2,data):
+    
+    """% nnPredict predicts the label of data given the parameter w1, w2 of Neural
+    % Network.
+
+    % Input:
+    % w1: matrix of weights of connections from input layer to hidden layers.
+    %     w1(i, j) represents the weight of connection from unit j in input 
+    %     layer to unit j in hidden layer.
+    % w2: matrix of weights of connections from hidden layer to output layers.
+    %     w2(i, j) represents the weight of connection from unit j in input 
+    %     layer to unit j in hidden layer.
+    % data: matrix of data. Each row of this matrix represents the feature 
+    %       vector of a particular image
+       
+    % Output: 
+    % label: a column vector of predicted labels""" 
+    labels = []
+    num_examples = data.shape[0]
+
+    
+    # Add attribute d + 1 - column of 1's
+    data = np.hstack((data, np.ones(num_examples).reshape((num_examples,1))))
+    
+    # For every example, compute the predicted digit
+    # and append it to the label list
+    for example in data:
+        output_hidden_nodes = sigmoid(np.sum(w1*example, axis=1))
+        # Add attribute m + 1 - value 1
+        output_hidden_nodes = np.hstack((output_hidden_nodes, np.ones(1)))
+        output = sigmoid(np.sum(w2*output_hidden_nodes, axis=1))
+        predicted_digit = np.argmax(output)
+        labels.append(predicted_digit)
+    
+    # Return an column vector    
+    return (np.array(labels).reshape((num_examples,1)), output_hidden_nodes, output)
     
     
     
@@ -154,35 +196,30 @@ def nnObjFunction(params, *args):
     % w2: matrix of weights of connections from hidden layer to output layers.
     %     w2(i, j) represents the weight of connection from unit j in hidden 
     %     layer to unit i in output layer."""
-    
+    global HIDDEN_NODE_OUT
     n_input, n_hidden, n_class, training_data, training_label, lambdaval = args
     
     w1 = params[0:n_hidden * (n_input + 1)].reshape( (n_hidden, (n_input + 1)))
     w2 = params[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
-    obj_val = 0  
+      
     
     n_train = training_data.shape[0]
 
     regularization_term = np.sum(w1 * w1) + np.sum(w2 * w2)
     regularization_term = (lambdaval / (2 * n_train)) * regularization_term
     
-    for example in training_data:
-        output_hidden_nodes = sigmoid(np.sum(w1*example, axis=1))
-        # Add attribute m + 1 - value 1
-        output_hidden_nodes = np.hstack((output_hidden_nodes, np.ones(1)))
-        output = sigmoid(np.sum(w2*output_hidden_nodes, axis=1))
-    predicted_labels = nnPredict(w1, w2, training_data)
-
-    real_output_vector = np.zeros((1, n_class))
-    predicted_output_vector = np.zeros((1, n_class))
+    predicted_labels, output_hidden_nodes, output = nnPredictFull(w1, w2, training_data)
+    
+    real_output_vector = np.zeros(n_class)
+    predicted_output_vector = np.zeros(n_class)
     obj_val = 0.0
-    for n in range(n_train):
-        real_output_vector[training_label[n]] = 1
-        predicted_output_vector[predicted_labels[n]] = 1
-	    
-        obj_val = obj_val + np.sum(predicted_output_vector * np.log(real_output_vector) + ((1 - predicted_output_vector) * np.log(1 - real_output_vector)))
-        real_output_vector[training_label[n]] = 0
-        predicted_output_vector[predicted_labels[n]] = 0
+    training_label = training_label.astype(integer)   
+    for n in range(1):
+        real_output_vector[training_label[n]] = 1.0
+        predicted_output_vector[predicted_labels[n]] = 1.0
+        obj_val = obj_val + np.sum((predicted_output_vector * np.log(real_output_vector)) + ((1 - predicted_output_vector) * np.log(1 - real_output_vector)))
+        real_output_vector[training_label[n]] = 0.0
+        predicted_output_vector[predicted_labels[n]] = 0.0
 
     obj_val = -1 / n_train * obj_val
     obj_val = obj_val + regularization_term
@@ -216,7 +253,7 @@ def nnObjFunction(params, *args):
     
     #Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     #you would use code similar to the one below to create a flat array
-    obj_grad = np.concatenate((w1.flatten(), w2.flatten()))
+    obj_grad = np.concatenate((w1.flatten(), w2.flatten()),0)
     
     
     return (obj_val,obj_grad)
@@ -239,26 +276,9 @@ def nnPredict(w1,w2,data):
     %       vector of a particular image
        
     % Output: 
-    % label: a column vector of predicted labels""" 
-    labels = []
-    num_examples = data.shape[0]
-
-    
-    # Add attribute d + 1 - column of 1's
-    data = np.hstack((data, np.ones(num_examples).reshape((num_examples,1))))
-    
-    # For every example, compute the predicted digit
-    # and append it to the label list
-    for example in data:
-        output_hidden_nodes = sigmoid(np.sum(w1*example, axis=1))
-        # Add attribute m + 1 - value 1
-        output_hidden_nodes = np.hstack((output_hidden_nodes, np.ones(1)))
-        output = sigmoid(np.sum(w2*output_hidden_nodes, axis=1))
-        predicted_digit = np.argmax(output)
-        labels.append(predicted_digit)
-    
+    % label: a column vector of predicted labels"""   
     # Return an column vector    
-    return np.array(labels).reshape((num_examples,1))
+    return nnPredictFull(w1,w2,data)[0]
     
 
 
@@ -275,7 +295,7 @@ n_input = train_data.shape[1];
 
 # set the number of nodes in hidden unit (not including bias unit)
 n_hidden = 4;
-				   
+   
 # set the number of nodes in output unit
 n_class = 10;				   
 
