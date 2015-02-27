@@ -163,7 +163,7 @@ def nnObjFunction(params, *args):
     obj_val = 0  
     
     #Your code here
-    
+    for 
     
     
     #Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
@@ -194,6 +194,10 @@ def nnPredict(w1,w2,data):
     % label: a column vector of predicted labels""" 
     
     labels = []
+    num_examples = data.shape[0]
+    
+    # Add attribute d + 1 - column of 1's
+    data = np.hstack((data, np.ones(num_examples).reshape((num_examples,1))))
     
     # For every example, compute the predicted digit
     # and append it to the label list
@@ -204,7 +208,7 @@ def nnPredict(w1,w2,data):
         labels.append(predicted_digit)
     
     # Return an column vector    
-    return np.array(labels).reshape((data.shape[0],1))
+    return np.array(labels).reshape((num_examples,1))
     
 
 
