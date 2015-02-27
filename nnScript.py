@@ -119,7 +119,7 @@ def preprocess():
 
 
 
-def nnPredictFull(w1,w2,data):
+def nnPredictHelper(w1,w2,data):
     
     """% nnPredict predicts the label of data given the parameter w1, w2 of Neural
     % Network.
@@ -135,7 +135,9 @@ def nnPredictFull(w1,w2,data):
     %       vector of a particular image
        
     % Output: 
-    % label: a column vector of predicted labels""" 
+    % label: a column vector of predicted labels, vector of hidden node output, and vector of
+    % output node output
+    """ 
     labels = []
     num_examples = data.shape[0]
 
@@ -208,7 +210,7 @@ def nnObjFunction(params, *args):
     regularization_term = np.sum(w1 * w1) + np.sum(w2 * w2)
     regularization_term = (lambdaval / (2 * n_train)) * regularization_term
     
-    predicted_labels, output_hidden_nodes, output = nnPredictFull(w1, w2, training_data)
+    predicted_labels, output_hidden_nodes, output = nnPredictHelper(w1, w2, training_data)
     
     real_output_vector = np.zeros(n_class)
     predicted_output_vector = np.zeros(n_class)
@@ -278,7 +280,7 @@ def nnPredict(w1,w2,data):
     % Output: 
     % label: a column vector of predicted labels"""   
     # Return an column vector    
-    return nnPredictFull(w1,w2,data)[0]
+    return nnPredictHelper(w1,w2,data)[0]
     
 
 
