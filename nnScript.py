@@ -144,6 +144,7 @@ def nnPredictHelper(w1,w2,data):
     
     # Add attribute d + 1 - column of 1's
     data = np.hstack((data, np.ones(num_examples).reshape((num_examples,1))))
+    outputs = None
     
     # For every example, compute the predicted digit
     # and append it to the label list
@@ -152,12 +153,41 @@ def nnPredictHelper(w1,w2,data):
         # Add attribute m + 1 - value 1
         output_hidden_nodes = np.hstack((output_hidden_nodes, np.ones(1)))
         output = sigmoid(np.sum(w2*output_hidden_nodes, axis=1))
+        if outputs is None:
+            outputs = output
+        else:
+            outputs = np.hstack((outputs, output))
         predicted_digit = np.argmax(output)
         labels.append(predicted_digit)
     
     # Return an column vector    
-    return (np.array(labels).reshape((num_examples,1)), output_hidden_nodes, output)
+    return (np.array(labels).reshape((num_examples,1)), output_hidden_nodes, outputs)
     
+    
+def feedForward(feature_vector, num_in, num_out, weights):
+    print weights.shape[0] # == num_out
+    print weights.shape[1] # == num_in  
+    print feature_vector.shape
+
+def feed(inputs, num_in, num_out, weights):
+    outputs = np.array([])
+        
+    for output_index in range(num_out):
+        value = 0.0
+        
+        for input_index in range(num_in):
+            if inputs.shape[1] == 1:
+                input_array = inputs
+            else:
+                input_array = inputs[input_index,:]
+            input_array = np.append(input_array, 1)
+            weight_array = weights[output_index, :]
+            value += np.dot(weight_array, input_array)
+    
+        value = sigmoid(value)
+        outputs = np.append(outputs, value)
+            
+    return outputs[:, np.newaxis]
     
     
 
@@ -198,11 +228,45 @@ def nnObjFunction(params, *args):
     % w2: matrix of weights of connections from hidden layer to output layers.
     %     w2(i, j) represents the weight of connection from unit j in hidden 
     %     layer to unit i in output layer."""
-    global HIDDEN_NODE_OUT
     n_input, n_hidden, n_class, training_data, training_label, lambdaval = args
     
     w1 = params[0:n_hidden * (n_input + 1)].reshape( (n_hidden, (n_input + 1)))
     w2 = params[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
+    ############## EXTRA CODE HERE
+    obj_val = 0
+    
+    feedForward(training_data[:0], n_input, n_hidden, w1)
+    hidden_outputs = feed(training_data, n_input, n_hidden, w1)
+#     print hidden_outputs
+#     class_outputs = feed(hidden_outputs, n_hidden, n_class, w2)
+#     print class_outputs
+#     # Feedforward Propagation
+#     print w1.shape
+#     print w2.shape
+#     print training_data.shape
+#     
+#     
+#     hidden_units_output = None
+#     # For each hidden unit j
+#     for j in range(n_hidden):
+#         value = 0.0
+#         # Compute weighted sum of trainind data inputs
+#         for i in range(training_data.shape[1]):
+#             print i
+#             value += w1[j,i] * training_data[i,:]
+#         
+#         # Apply the activation function
+#         value = sigmoid(np.hstack((value, np.ones(1))))
+#         
+#         if hidden_units_output is None:
+#             hidden_units_output = value
+#         else:
+#             hidden_units_output = np.vstack((hidden_units_output, value))
+#     print hidden_units_output.shape
+#     print hidden_units_output[0,:]
+# #     a_j = 
+    
+    ############## EXTRA CODE END
       
     
     n_train = training_data.shape[0]
@@ -210,7 +274,7 @@ def nnObjFunction(params, *args):
     regularization_term = np.sum(w1 * w1) + np.sum(w2 * w2)
     regularization_term = (lambdaval / (2 * n_train)) * regularization_term
     
-    predicted_labels, output_hidden_nodes, output = nnPredictHelper(w1, w2, training_data)
+    predicted_labels, output_hidden_nodes, outputs = nnPredictHelper(w1, w2, training_data)
     
     real_output_vector = np.zeros(n_class)
     predicted_output_vector = np.zeros(n_class)
