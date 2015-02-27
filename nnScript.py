@@ -3,8 +3,11 @@ from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
 
+<<<<<<< HEAD
 HIDDEN_NODE_OUT = None
 
+=======
+>>>>>>> b9407f8f3e38f84f148db073694b93eac4bdfccd
 
 def initializeWeights(n_in,n_out):
     """
@@ -261,6 +264,26 @@ def nnPredict(w1,w2,data):
         predicted_digit = np.argmax(output)
         labels.append(predicted_digit)
     
+<<<<<<< HEAD
+=======
+    labels = []
+    num_examples = data.shape[0]
+
+    
+    # Add attribute d + 1 - column of 1's
+    data = np.hstack((data, np.ones(num_examples).reshape((num_examples,1))))
+    
+    # For every example, compute the predicted digit
+    # and append it to the label list
+    for example in data:
+        output_hidden_nodes = sigmoid(np.sum(w1*example, axis=1))
+        # Add attribute m + 1 - value 1
+        output_hidden_nodes = np.hstack((output_hidden_nodes, np.ones(1)))
+        output = sigmoid(np.sum(w2*output_hidden_nodes, axis=1))
+        predicted_digit = np.argmax(output)
+        labels.append(predicted_digit)
+    
+>>>>>>> b9407f8f3e38f84f148db073694b93eac4bdfccd
     # Return an column vector    
     return np.array(labels).reshape((num_examples,1))
     
