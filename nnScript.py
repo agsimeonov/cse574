@@ -2,6 +2,7 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
+from numpy import integer
 
 HIDDEN_NODE_OUT = None
 
@@ -156,31 +157,30 @@ def nnObjFunction(params, *args):
     % w2: matrix of weights of connections from hidden layer to output layers.
     %     w2(i, j) represents the weight of connection from unit j in hidden 
     %     layer to unit i in output layer."""
-    
+    global HIDDEN_NODE_OUT
     n_input, n_hidden, n_class, training_data, training_label, lambdaval = args
     
     w1 = params[0:n_hidden * (n_input + 1)].reshape( (n_hidden, (n_input + 1)))
     w2 = params[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
-    obj_val = 0  
+      
     
     n_train = training_data.shape[0]
-
-
+    
     regularization_term = np.sum(w1 * w1) + np.sum(w2 * w2)
     regularization_term = (lambdaval / (2 * n_train)) * regularization_term
 
     predicted_labels = nnPredict(w1, w2, training_data)
-
-    real_output_vector = np.zeros((1, n_class))
-    predicted_output_vector = np.zeros((1, n_class))
+    
+    real_output_vector = np.zeros(n_class)
+    predicted_output_vector = np.zeros(n_class)
     obj_val = 0.0
-    for n in range(n_train):
-        real_output_vector[training_label[n]] = 1
-        predicted_output_vector[predicted_labels[n]] = 1
-	    
-        obj_val = obj_val + np.sum(predicted_output_vector * np.log(real_output_vector) + ((1 - predicted_output_vector) * np.log(1 - real_output_vector)))
-        real_output_vector[training_label[n]] = 0
-        predicted_output_vector[predicted_labels[n]] = 0
+    training_label = training_label.astype(integer)   
+    for n in range(1):
+        real_output_vector[training_label[n]] = 1.0
+        predicted_output_vector[predicted_labels[n]] = 1.0
+        obj_val = obj_val + np.sum((predicted_output_vector * np.log(real_output_vector)) + ((1 - predicted_output_vector) * np.log(1 - real_output_vector)))
+        real_output_vector[training_label[n]] = 0.0
+        predicted_output_vector[predicted_labels[n]] = 0.0
 
     obj_val = -1 / n_train * obj_val
     obj_val = obj_val + regularization_term
@@ -190,12 +190,12 @@ def nnObjFunction(params, *args):
         real_output_vector[training_label[k]] = 1
         predicted_output_vector[predicted_labels[k]] = 1
         for i in range(n_hidden):
-      	    gradient1 = np.sum((predicted_output_vector - real_output_vector) * w2[:, i])
-	    for j in range(n_input + 1):
-	        gradient2 = (1 - HIDDEN_NODE_OUT[k, i]) * HIDDEN_NODE_OUT[k, i] * training_data[k, j]
-	        update_hidden_weights[i, j] = update_hidden_weights[i, j] + gradient1 + gradient2
-	real_output_vector[training_label[k]] = 0
-	predicted_output_vector[predicted_labels[k]] = 0
+            gradient1 = np.sum((predicted_output_vector - real_output_vector) * w2[:, i])
+            for j in range(n_input + 1):
+                gradient2 = (1 - HIDDEN_NODE_OUT[k, i]) * HIDDEN_NODE_OUT[k, i] * training_data[k, j]
+                update_hidden_weights[i, j] = update_hidden_weights[i, j] + gradient1 + gradient2
+        real_output_vector[training_label[k]] = 0
+        predicted_output_vector[predicted_labels[k]] = 0
     w1 = (1 / n_train) * (update_hidden_weights + (lambdaval * w1)) 
 
     update_output_weights = np.zeros((n_class, n_hidden + 1)); 
@@ -204,17 +204,17 @@ def nnObjFunction(params, *args):
         predicted_output_vector[predicted_labels[k]] = 1
         for i in range(n_class):
             for j in range(n_hidden + 1):
-		gradient = (predicted_output_vector[i] - real_output_vector[i]) * HIDDEN_NODE_OUT[k, j]
-		update_hidden_weights[i, j] = update_hidden_weights[i, j] + gradient 
-	real_output_vector[training_label[k]] = 0
-	predicted_output_vector[predicted_labels[k]] = 0
+                gradient = (predicted_output_vector[i] - real_output_vector[i]) * HIDDEN_NODE_OUT[k, j]
+                update_hidden_weights[i, j] = update_hidden_weights[i, j] + gradient 
+        real_output_vector[training_label[k]] = 0
+        predicted_output_vector[predicted_labels[k]] = 0
     w2 = (1 / n_train) * (update_output_weights + (lambdaval * w2))
     #Your code here
     
     
     #Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     #you would use code similar to the one below to create a flat array
-    obj_grad = np.concatenate((w1.flatten(), w2.flatten()))
+    obj_grad = np.concatenate((w1.flatten(), w2.flatten()),0)
     
     
     return (obj_val,obj_grad)
@@ -239,6 +239,7 @@ def nnPredict(w1,w2,data):
     % Output: 
     % label: a column vector of predicted labels""" 
     global HIDDEN_NODE_OUT
+    HIDDEN_NODE_OUT = None
     labels = []
     num_examples = data.shape[0]
 
@@ -278,7 +279,7 @@ n_input = train_data.shape[1];
 
 # set the number of nodes in hidden unit (not including bias unit)
 n_hidden = 4;
-				   
+   
 # set the number of nodes in output unit
 n_class = 10;				   
 
