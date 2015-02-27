@@ -3,8 +3,6 @@ from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
 
-HIDDEN_NODE_OUT = None
-
 def initializeWeights(n_in,n_out):
     """
     # initializeWeights return the random weights for Neural Network given the
@@ -165,10 +163,14 @@ def nnObjFunction(params, *args):
     
     n_train = training_data.shape[0]
 
-
     regularization_term = np.sum(w1 * w1) + np.sum(w2 * w2)
     regularization_term = (lambdaval / (2 * n_train)) * regularization_term
-
+    
+    for example in training_data:
+        output_hidden_nodes = sigmoid(np.sum(w1*example, axis=1))
+        # Add attribute m + 1 - value 1
+        output_hidden_nodes = np.hstack((output_hidden_nodes, np.ones(1)))
+        output = sigmoid(np.sum(w2*output_hidden_nodes, axis=1))
     predicted_labels = nnPredict(w1, w2, training_data)
 
     real_output_vector = np.zeros((1, n_class))
@@ -192,7 +194,7 @@ def nnObjFunction(params, *args):
         for i in range(n_hidden):
       	    gradient1 = np.sum((predicted_output_vector - real_output_vector) * w2[:, i])
 	    for j in range(n_input + 1):
-	        gradient2 = (1 - HIDDEN_NODE_OUT[k, i]) * HIDDEN_NODE_OUT[k, i] * training_data[k, j]
+	        gradient2 = (1 - output_hidden_nodes[k, i]) * output_hidden_nodes[k, i] * training_data[k, j]
 	        update_hidden_weights[i, j] = update_hidden_weights[i, j] + gradient1 + gradient2
 	real_output_vector[training_label[k]] = 0
 	predicted_output_vector[predicted_labels[k]] = 0
@@ -204,7 +206,7 @@ def nnObjFunction(params, *args):
         predicted_output_vector[predicted_labels[k]] = 1
         for i in range(n_class):
             for j in range(n_hidden + 1):
-		gradient = (predicted_output_vector[i] - real_output_vector[i]) * HIDDEN_NODE_OUT[k, j]
+		gradient = (predicted_output_vector[i] - real_output_vector[i]) * output_hidden_nodes[k, j]
 		update_hidden_weights[i, j] = update_hidden_weights[i, j] + gradient 
 	real_output_vector[training_label[k]] = 0
 	predicted_output_vector[predicted_labels[k]] = 0
@@ -238,7 +240,6 @@ def nnPredict(w1,w2,data):
        
     % Output: 
     % label: a column vector of predicted labels""" 
-    global HIDDEN_NODE_OUT
     labels = []
     num_examples = data.shape[0]
 
@@ -252,10 +253,6 @@ def nnPredict(w1,w2,data):
         output_hidden_nodes = sigmoid(np.sum(w1*example, axis=1))
         # Add attribute m + 1 - value 1
         output_hidden_nodes = np.hstack((output_hidden_nodes, np.ones(1)))
-        if HIDDEN_NODE_OUT is None:
-            HIDDEN_NODE_OUT = output_hidden_nodes
-        else:
-            HIDDEN_NODE_OUT = np.vstack((HIDDEN_NODE_OUT, output_hidden_nodes))
         output = sigmoid(np.sum(w2*output_hidden_nodes, axis=1))
         predicted_digit = np.argmax(output)
         labels.append(predicted_digit)
