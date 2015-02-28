@@ -2,6 +2,7 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
+from time import strftime, localtime
 import sys
 
 def perceptron(weights, example):
@@ -13,7 +14,7 @@ def perceptron(weights, example):
     # weights(i,j) : weight from feature j to unit i
     # example : vector of attributes, size d
     '''
-    linear_comb = np.sum(weights*(np.hstack((example,np.ones(1)))), axis=1)
+    linear_comb = np.sum(weights*(np.hstack((example,np.ones(1.0)))), axis=1)
     output = sigmoid(linear_comb)
     
     return output
@@ -129,8 +130,7 @@ def preprocess():
     delete_indexes = []
     for i in range(NUM_ATTR):
         if np.ptp(train_data[:,i]) == 0.0 and \
-            np.ptp(validation_data[:,i]) == 0.0 and\
-            np.ptp(test_data[:,i]) == 0.0:
+            np.ptp(validation_data[:,i]) == 0.0:
                 delete_indexes.append(i)
 
     train_data = np.delete(train_data, delete_indexes, axis=1)
@@ -184,7 +184,6 @@ def nnObjFunction(params, *args):
     
     w1 = params[0:n_hidden * (n_input + 1)].reshape( (n_hidden, (n_input + 1)))
     w2 = params[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
-    obj_val = 0  
     
     NUM_EXAMPLES = training_data.shape[0]
     
@@ -193,9 +192,9 @@ def nnObjFunction(params, *args):
     # one for the input weights, one for the output weights
     #
     # Accumulators for error and two gradients
-    error = 0
-    gradient_w1 = 0
-    gradient_w2 = 0
+    error = 0.0
+    gradient_w1 = 0.0
+    gradient_w2 = 0.0
     
     for i in range(NUM_EXAMPLES):
         example = training_data[i]
@@ -208,31 +207,29 @@ def nnObjFunction(params, *args):
         hidden_output, output = feed_forward(w1,w2,example)
         
         ''' Error on example i '''
-        error += np.sum(correct_output * np.log(output) + (1-correct_output) * np.log(1-output))
+        error += np.sum(correct_output * np.log(output) + (1.0-correct_output) * np.log(1.0-output))
         
         # Gradient calculation
         ''' delta and gradient w2 '''
         delta_output = output - correct_output
-        gradient_w2 += delta_output.reshape((n_class,1)) * np.hstack((hidden_output,np.ones(1)))
+        gradient_w2 += delta_output.reshape((n_class,1)) * np.hstack((hidden_output,np.ones(1.0)))
         
         ''' gradient w1 '''
         sum_delta_w = np.dot(delta_output,w2) # it has one entry per hidden node + 1
         sum_delta_w = sum_delta_w[:-1] # we get rid of the last entry
-        delta_hidden = (1-hidden_output) * hidden_output * sum_delta_w
-        gradient_w1 += delta_hidden.reshape((n_hidden,1)) * np.hstack((example,np.ones(1)))
+        delta_hidden = (1.0-hidden_output) * hidden_output * sum_delta_w
+        gradient_w1 += delta_hidden.reshape((n_hidden,1)) * np.hstack((example,np.ones(1.0)))
         
     # At this point, we average error and two gradients
     error /= -NUM_EXAMPLES
-    gradient_w1 /= NUM_EXAMPLES
-    gradient_w2 /= NUM_EXAMPLES
     
     # Regularization error
     sum_squares_weight = np.sum(np.sum(w1**2)) + np.sum(np.sum(w2**2))
-    error += (lambdaval / (2*NUM_EXAMPLES)) * sum_squares_weight
+    error += (lambdaval * sum_squares_weight) / (2.0*NUM_EXAMPLES)
     
     # Regularization gradients
-    gradient_w1 += (lambdaval / NUM_EXAMPLES) * w1
-    gradient_w2 += (lambdaval / NUM_EXAMPLES) * w2
+    gradient_w1 = (gradient_w1 + lambdaval * w1) / NUM_EXAMPLES
+    gradient_w2 = (gradient_w2 + lambdaval * w2) / NUM_EXAMPLES
     
     #Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     #you would use code similar to the one below to create a flat array
@@ -283,7 +280,7 @@ def nnPredict(w1,w2,data):
 train_data, train_label, validation_data,validation_label, test_data, test_label = preprocess();
 
 
-#  Train Neural Network
+# Train Neural Network
 
 # set the number of nodes in input unit (not including bias unit)
 n_input = train_data.shape[1]; 
@@ -294,56 +291,61 @@ n_hidden = int(sys.argv[1]);
 # set the number of nodes in output unit
 n_class = 10;				   
 
-# initialize the weights into some random matrices
-initial_w1 = initializeWeights(n_input, n_hidden);
-initial_w2 = initializeWeights(n_hidden, n_class);
-
-# unroll 2 weight matrices into single column vector
-initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()),0)
-
-# set the regularization hyper-parameter
-lambdaval = float(sys.argv[2]);
-
-print('Training neural network with parameters: hidden nodes = ' + str(n_hidden) + ' lambda = ' + str(lambdaval))
-
-args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
-
-#Train Neural Network using fmin_cg or minimize from scipy,optimize module. Check documentation for a working example
-
-opts = {'maxiter' : 50}    # Preferred value.
-
-nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args,method='CG', options=opts)
-
-#In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
-#and nnObjGradient. Check documentation for this function before you proceed.
-#nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)
-
-
-#Reshape nnParams from 1D vector into w1 and w2 matrices
-w1 = nn_params.x[0:n_hidden * (n_input + 1)].reshape( (n_hidden, (n_input + 1)))
-w2 = nn_params.x[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
-
-
-#Test the computed parameters
-
-predicted_label = nnPredict(w1,w2,train_data)
-
-#find the accuracy on Training Dataset
-
-print('\n Training set Accuracy:' + str(100*np.mean((predicted_label == train_label).astype(float))) + '%')
-
-predicted_label = nnPredict(w1,w2,validation_data)
-
-#find the accuracy on Validation Dataset
-
-print('\n Validation set Accuracy:' + str(100*np.mean((predicted_label == validation_label).astype(float))) + '%')
-
-
-predicted_label = nnPredict(w1,w2,test_data)
-
-#find the accuracy on Validation Dataset
-
-print('\n Test set Accuracy:' + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
-print
-print
-print
+for lambdaval in np.arange(0.0,1.1,0.1):
+    # initialize the weights into some random matrices
+    initial_w1 = initializeWeights(n_input, n_hidden);
+    initial_w2 = initializeWeights(n_hidden, n_class);
+    
+    # unroll 2 weight matrices into single column vector
+    initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()),0)
+    
+    # set the regularization hyper-parameter
+    #lambdaval = np.float64(sys.argv[2]);
+    
+    # Print training parameters
+    print('Training neural network with parameters: hidden nodes = ' + str(n_hidden) + ' lambda = ' + str(lambdaval))
+    
+    args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
+    
+    #Train Neural Network using fmin_cg or minimize from scipy,optimize module. Check documentation for a working example
+    
+    opts = {'maxiter' : 100}    # Preferred value.
+    
+    # Print time - begin training
+    print('\nBeginning training. Time: ' + strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    
+    nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args,method='CG', options=opts)
+    
+    #In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
+    #and nnObjGradient. Check documentation for this function before you proceed.
+    #nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)
+    
+    # Print time - end training
+    print('\nEnding training. Time: ' + strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    
+    #Reshape nnParams from 1D vector into w1 and w2 matrices
+    w1 = nn_params.x[0:n_hidden * (n_input + 1)].reshape( (n_hidden, (n_input + 1)))
+    w2 = nn_params.x[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
+    
+    
+    #Test the computed parameters
+    
+    predicted_label = nnPredict(w1,w2,train_data)
+    
+    #find the accuracy on Training Dataset
+    
+    print('\n Training set Accuracy:' + str(100*np.mean((predicted_label == train_label).astype(float))) + '%')
+    
+    predicted_label = nnPredict(w1,w2,validation_data)
+    
+    #find the accuracy on Validation Dataset
+    
+    print('\n Validation set Accuracy:' + str(100*np.mean((predicted_label == validation_label).astype(float))) + '%')
+    
+    
+    predicted_label = nnPredict(w1,w2,test_data)
+    
+    #find the accuracy on Validation Dataset
+    
+    print('\n Test set Accuracy:' + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
+    print('\n\n\n')
