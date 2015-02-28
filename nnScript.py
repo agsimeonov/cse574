@@ -163,33 +163,22 @@ def nnPredictHelper(w1,w2,data):
     # Return an column vector    
     return (np.array(labels).reshape((num_examples,1)), output_hidden_nodes, outputs)
     
+def feed(vector, weight, num_in, num_out):
+    vector = np.append(vector, 1)
+    out = np.array([])
     
-def feedForward(feature_vector, num_in, num_out, weights):
-    print weights.shape[0] # == num_out
-    print weights.shape[1] # == num_in  
-    print feature_vector.shape
-
-def feed(inputs, num_in, num_out, weights):
-    outputs = np.array([])
-        
-    for output_index in range(num_out):
+    for j in range(num_out):
         value = 0.0
-        
-        for input_index in range(num_in):
-            if inputs.shape[1] == 1:
-                input_array = inputs
-            else:
-                input_array = inputs[input_index,:]
-            input_array = np.append(input_array, 1)
-            weight_array = weights[output_index, :]
-            value += np.dot(weight_array, input_array)
+        for i in range(num_in + 1):
+            value += weight[j, i] * vector[i]
+        out = np.append(out, sigmoid(value))
     
-        value = sigmoid(value)
-        outputs = np.append(outputs, value)
-            
-    return outputs[:, np.newaxis]
+    return out
     
-    
+def feedForward(feature_vector, w1, w2, num_in, num_hidden, num_out):
+    hidden_values = feed(feature_vector, w1, num_in, num_hidden)
+    output_values = feed(hidden_values, w2, num_hidden, num_out)        
+    return (hidden_values, output_values)
 
 def nnObjFunction(params, *args):
     """% nnObjFunction computes the value of objective function (negative log 
@@ -235,8 +224,11 @@ def nnObjFunction(params, *args):
     ############## EXTRA CODE HERE
     obj_val = 0
     
-    feedForward(training_data[:0], n_input, n_hidden, w1)
-    hidden_outputs = feed(training_data, n_input, n_hidden, w1)
+#     print training_data[:719]
+    for example in train_data:
+        hidden_values, output_values = feedForward(example, w1, w2, n_input, n_hidden, n_class)
+        print output_values
+    #hidden_outputs = feed(training_data, n_input, n_hidden, w1)
 #     print hidden_outputs
 #     class_outputs = feed(hidden_outputs, n_hidden, n_class, w2)
 #     print class_outputs
