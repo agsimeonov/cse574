@@ -3,6 +3,7 @@ from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
 from numpy import integer
+from cProfile import label
 
 
 def initializeWeights(n_in,n_out):
@@ -23,11 +24,9 @@ def initializeWeights(n_in,n_out):
     
     
     
-def sigmoid(z):
-    
+def sigmoid(z):   
     """# Notice that z can be a scalar, a vector or a matrix
     # return the sigmoid of input z"""
-    
     return 1.0 / (1.0 + np.exp(-1.0 * z))
     
     
@@ -163,22 +162,30 @@ def nnPredictHelper(w1,w2,data):
     # Return an column vector    
     return (np.array(labels).reshape((num_examples,1)), output_hidden_nodes, outputs)
     
-def feed(vector, weight, num_in, num_out):
-    vector = np.append(vector, 1)
-    out = np.array([])
+def feed(input_vector, weights):
+    return sigmoid(np.sum(weights * np.hstack((input_vector, np.ones(1))), axis=1))
     
-    for j in range(num_out):
-        value = 0.0
-        for i in range(num_in + 1):
-            value += weight[j, i] * vector[i]
-        out = np.append(out, sigmoid(value))
-    
-    return out
-    
-def feedForward(feature_vector, w1, w2, num_in, num_hidden, num_out):
-    hidden_values = feed(feature_vector, w1, num_in, num_hidden)
-    output_values = feed(hidden_values, w2, num_hidden, num_out)        
+def feedForward(feature_vector, w1, w2):
+    hidden_values = feed(feature_vector, w1)
+    output_values = feed(hidden_values, w2)    
     return (hidden_values, output_values)
+
+targets = {0.0 : np.array([ 1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]),
+           1.0 : np.array([ 0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]),
+           2.0 : np.array([ 0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]),
+           3.0 : np.array([ 0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.]),
+           4.0 : np.array([ 0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.]),
+           5.0 : np.array([ 0.,  0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.]),
+           6.0 : np.array([ 0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.]),
+           7.0 : np.array([ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,  0.]),
+           8.0 : np.array([ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.]),
+           9.0 : np.array([ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.])}
+
+def getTargetValues(label):
+    return targets[label]
+
+def error(target, output):
+    return np.sum(target * np.log(output) + (1 - target) * np.log(1 - output))
 
 def nnObjFunction(params, *args):
     """% nnObjFunction computes the value of objective function (negative log 
@@ -221,13 +228,29 @@ def nnObjFunction(params, *args):
     
     w1 = params[0:n_hidden * (n_input + 1)].reshape( (n_hidden, (n_input + 1)))
     w2 = params[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
+    
     ############## EXTRA CODE HERE
-    obj_val = 0
+    obj_val = 0.0
     
 #     print training_data[:719]
-    for example in train_data:
-        hidden_values, output_values = feedForward(example, w1, w2, n_input, n_hidden, n_class)
-        print output_values
+    print training_data.shape[0]
+
+    for example in np.hstack((training_label, training_data)):
+        label = example[0]
+        target_values = getTargetValues(label)
+        feature_vector = example[1:]
+        hidden_values, output_values = feedForward(feature_vector, w1, w2)
+        
+        # Error
+        obj_val += error(target_values, output_values)
+        
+        # Gradient Error Hidden to Output
+        break
+    
+    obj_val = (-1 / training_data.shape[0]) * obj_val
+    
+    print obj_val
+    
     #hidden_outputs = feed(training_data, n_input, n_hidden, w1)
 #     print hidden_outputs
 #     class_outputs = feed(hidden_outputs, n_hidden, n_class, w2)
