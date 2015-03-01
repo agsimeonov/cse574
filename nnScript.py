@@ -2,28 +2,37 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
+import sys
 
-def stack(mat, name, digits):
-    stack = None
-    for digit in digits:
-        key = name + str(digit)
-        if stack is None:
-            stack = mat.get(key)
-        else:
-            stack = np.concatenate((stack, mat.get(key)))
-    return stack
+def perceptron(weights, example):
+    '''
+    # It computes the ouput of a layer of perceptrons
+    # A single output is = sigmoid(linear combination of input attributes)
+    #
+    # weights : matrix of weights, size m x d+1
+    # weights(i,j) : weight from feature j to unit i
+    # example : vector of attributes, size d
+    '''
+    linear_comb = np.sum(weights*(np.hstack((example,np.ones(1)))), axis=1)
+    output = sigmoid(linear_comb)
+    
+    return output
 
-def label(data, digits):
-    label = []
-    for i in range(data.shape[0]):
-        label.append(int(i/(data.shape[0]/len(digits))))
-    label = np.array(label)
-    return label[:,np.newaxis]
-
-def normalize(data):
-    data = data.astype(np.float32)
-    return data / 255
-
+def feed_forward(w1, w2, example):
+    '''
+    # It computes the ouputs of a two layer network of perceptrons
+    #
+    # w1 : matrix of weights, size m x d+1
+    # w2 : matrix of weights, size k x d+1
+    # weights(i,j) : weight from feature j to unit i
+    # example : vector of attributes, size d
+    '''
+    output_hidden = perceptron(w1, example)
+    output = perceptron(w2, output_hidden)
+    
+    return (output_hidden, output)
+    
+    
 def initializeWeights(n_in,n_out):
     """
     # initializeWeights return the random weights for Neural Network given the
@@ -78,58 +87,55 @@ def preprocess():
      - normalize the data to [0, 1]
      - feature selection"""
     
-    mat = loadmat('mnist_all.mat') #loads the MAT object as a Dictionary
+    mat = loadmat('mnist_all.mat') #loads the MAT object as a Dictionary    
     
-    #Pick a reasonable size for validation data
+    # Initialize variables and constants
+    NUM_TRAIN = 50000
+    NUM_ATTR = 784
+    training_data = np.zeros((0,NUM_ATTR))
+    test_data = np.zeros((0,NUM_ATTR))
+    training_label = np.zeros((0,))
+    test_label = np.zeros(0,)
     
+    # For every digit, stack corresponding matrices and labels
+    for i in range(0,10):
+        ''' Stack vertically training and test matrices '''
+        training_data = np.vstack((training_data, mat['train'+str(i)]))
+        test_data = np.vstack((test_data, mat['test'+str(i)]))
+        
+        ''' Create and stack label vectors '''
+        training_label = np.hstack((training_label, i * np.ones(mat['train'+str(i)].shape[0])))
+        test_label = np.hstack((test_label, i * np.ones(mat['test'+str(i)].shape[0])))
+        
+    # Normalize training and test matrices
+    training_data = training_data.astype(np.float64, copy=False)/255
+    test_data = test_data.astype(np.float64, copy=False)/255
     
-    #Your code here
-    TRAIN_NAME = 'train'
-    TEST_NAME = 'test'
-    DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    # Randomly split the training matrix in
+    # training (50000 x 784) and validation (10000 x 784).
+    # Label vector gets split accordingly
+    ''' Create a permutation of the rows '''
+    perm = np.random.permutation(range(training_data.shape[0]))
     
-    # 1.1 Stack all training matrices into one 60000 x 784 matrix
-    train_data = stack(mat, TRAIN_NAME, DIGITS)
-    # 1.2 Do the same for test matrices
-    test_data = stack(mat, TEST_NAME, DIGITS)
+    ''' Extract rows using the permutation '''
+    train_data = training_data[perm[0:NUM_TRAIN],:]
+    validation_data = training_data[perm[NUM_TRAIN:],:]
     
-    # 2.1 Create a 60000 length vector with true labels (digits) for each
-    # training example
-    train_label = label(train_data, DIGITS)
-    # 2.2 Same for test data
-    test_label = label(test_data, DIGITS)
+    ''' Do the same for label vector '''
+    train_label = training_label[perm[0:NUM_TRAIN]]
+    validation_label = training_label[perm[NUM_TRAIN:]]
     
-    # 3 Normalize the training matrix and test matrix so that the values are
-    # between 0 and 1
-    train_data = normalize(train_data)
-    test_data = normalize(test_data)
-    
-    # 4 Randomly split the 60000 x 784 normalized matrix into two matrices:
-    # training matrix (50000 x 784) and validation matrix (10000 x 784). Make
-    # sure you split the true labels vector into two parts as well.
-    train = np.concatenate((train_label, train_data), 1)
-    train = np.random.permutation(train)
-    train = np.hsplit(train, [1])
-    train_label = train[0]
-    train_data = train[1]
-    train_label = np.split(train_label, [50000])
-    train_data = np.split(train_data, [50000])
-    validation_label = train_label[1]
-    validation_label = validation_label.astype(int)
-    validation_data = train_data[1]
-    train_label = train_label[0]
-    train_label = train_label.astype(int)
-    train_data = train_data[0]
-    
-    # 5 Feature selection
-    ranges = np.ptp(train_data, axis=0)
-    i = 0
+    # Feature selection - eliminate undistinguishing attributes
     delete_indexes = []
-    for x in ranges:
-        if x == 0.0:
-            delete_indexes.append(i)
-        i = i + 1
+    for i in range(NUM_ATTR):
+        if np.ptp(train_data[:,i]) == 0.0 and \
+            np.ptp(validation_data[:,i]) == 0.0 and\
+            np.ptp(test_data[:,i]) == 0.0:
+                delete_indexes.append(i)
+
     train_data = np.delete(train_data, delete_indexes, axis=1)
+    validation_data = np.delete(validation_data, delete_indexes, axis=1)
+    test_data = np.delete(test_data, delete_indexes, axis=1)
     
     return train_data, train_label, validation_data, validation_label, test_data, test_label
     
@@ -139,7 +145,7 @@ def preprocess():
 def nnObjFunction(params, *args):
     """% nnObjFunction computes the value of objective function (negative log 
     %   likelihood error function with regularization) given the parameters 
-    %   of Neural Networks, thetraining data, their corresponding training 
+    %   of Neural Networks, the training data, their corresponding training 
     %   labels and lambda - regularization hyper-parameter.
 
     % Input:
@@ -180,19 +186,58 @@ def nnObjFunction(params, *args):
     w2 = params[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
     obj_val = 0  
     
-    #Your code here
-    #
-    #
-    #
-    #
-    #
+    NUM_EXAMPLES = training_data.shape[0]
     
+    # For each example, compute error and gradient
+    # For simplicity, there will be two gradient matrices:
+    # one for the input weights, one for the output weights
+    #
+    # Accumulators for error and two gradients
+    error = 0
+    gradient_w1 = 0
+    gradient_w2 = 0
     
+    for i in range(NUM_EXAMPLES):
+        example = training_data[i]
+        ''' Create correct output vector setting to 1.0 the entry 
+            correspondent to actual label'''
+        correct_output = np.zeros(n_class)
+        correct_output[training_label[i]] = 1.0
+        
+        ''' Perform a feed forward pass to get outputs '''
+        hidden_output, output = feed_forward(w1,w2,example)
+        
+        ''' Error on example i '''
+        error += np.sum(correct_output * np.log(output) + (1-correct_output) * np.log(1-output))
+        
+        # Gradient calculation
+        ''' delta and gradient w2 '''
+        delta_output = output - correct_output
+        gradient_w2 += delta_output.reshape((n_class,1)) * np.hstack((hidden_output,np.ones(1)))
+        
+        ''' gradient w1 '''
+        sum_delta_w = np.dot(delta_output,w2) # it has one entry per hidden node + 1
+        sum_delta_w = sum_delta_w[:-1] # we get rid of the last entry
+        delta_hidden = (1-hidden_output) * hidden_output * sum_delta_w
+        gradient_w1 += delta_hidden.reshape((n_hidden,1)) * np.hstack((example,np.ones(1)))
+        
+    # At this point, we average error and two gradients
+    error /= -NUM_EXAMPLES
+    gradient_w1 /= NUM_EXAMPLES
+    gradient_w2 /= NUM_EXAMPLES
+    
+    # Regularization error
+    sum_squares_weight = np.sum(np.sum(w1**2)) + np.sum(np.sum(w2**2))
+    error += (lambdaval / (2*NUM_EXAMPLES)) * sum_squares_weight
+    
+    # Regularization gradients
+    gradient_w1 += (lambdaval / NUM_EXAMPLES) * w1
+    gradient_w2 += (lambdaval / NUM_EXAMPLES) * w2
     
     #Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     #you would use code similar to the one below to create a flat array
-    #obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
-    obj_grad = np.array([])
+    obj_grad = np.concatenate((gradient_w1.flatten(), gradient_w2.flatten()),0)
+    obj_val = error
     
     return (obj_val,obj_grad)
 
@@ -216,10 +261,19 @@ def nnPredict(w1,w2,data):
     % Output: 
     % label: a column vector of predicted labels""" 
     
-    labels = np.array([])
-    #Your code here
+    labels = []
     
-    return labels
+    # For every example, compute the predicted digit
+    # and append it to the label list
+    for example in data:
+        ''' Compute output network '''
+        (output_hidden, output) = feed_forward(w1,w2,example)
+        ''' Maximum value among output units is predicted digit '''
+        predicted_digit = np.argmax(output)
+        labels.append(predicted_digit)
+    
+    # Return a vector with labels   
+    return np.array(labels)
     
 
 
@@ -235,7 +289,7 @@ train_data, train_label, validation_data,validation_label, test_data, test_label
 n_input = train_data.shape[1]; 
 
 # set the number of nodes in hidden unit (not including bias unit)
-n_hidden = 50;
+n_hidden = int(sys.argv[1]);
 				   
 # set the number of nodes in output unit
 n_class = 10;				   
@@ -248,8 +302,9 @@ initial_w2 = initializeWeights(n_hidden, n_class);
 initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()),0)
 
 # set the regularization hyper-parameter
-lambdaval = 0;
+lambdaval = float(sys.argv[2]);
 
+print('Training neural network with parameters: hidden nodes = ' + str(n_hidden) + ' lambda = ' + str(lambdaval))
 
 args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
 
@@ -265,8 +320,8 @@ nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args,method='
 
 
 #Reshape nnParams from 1D vector into w1 and w2 matrices
-w1 = nn_params[0:n_hidden * (n_input + 1)].reshape( (n_hidden, (n_input + 1)))
-w2 = nn_params[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
+w1 = nn_params.x[0:n_hidden * (n_input + 1)].reshape( (n_hidden, (n_input + 1)))
+w2 = nn_params.x[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
 
 
 #Test the computed parameters
@@ -288,4 +343,7 @@ predicted_label = nnPredict(w1,w2,test_data)
 
 #find the accuracy on Validation Dataset
 
-print('\n Test set Accuracy:' + + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
+print('\n Test set Accuracy:' + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
+print
+print
+print
