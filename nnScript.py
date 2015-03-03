@@ -291,61 +291,71 @@ n_hidden = int(sys.argv[1]);
 # set the number of nodes in output unit
 n_class = 10;				   
 
-for lambdaval in np.arange(0.0,1.1,0.1):
-    # initialize the weights into some random matrices
-    initial_w1 = initializeWeights(n_input, n_hidden);
-    initial_w2 = initializeWeights(n_hidden, n_class);
-    
-    # unroll 2 weight matrices into single column vector
-    initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()),0)
-    
-    # set the regularization hyper-parameter
-    #lambdaval = np.float64(sys.argv[2]);
-    
-    # Print training parameters
-    print('Training neural network with parameters: hidden nodes = ' + str(n_hidden) + ' lambda = ' + str(lambdaval))
-    
-    args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
-    
-    #Train Neural Network using fmin_cg or minimize from scipy,optimize module. Check documentation for a working example
-    
-    opts = {'maxiter' : 100}    # Preferred value.
-    
-    # Print time - begin training
-    print('\nBeginning training. Time: ' + strftime("%Y-%m-%d %H:%M:%S", localtime()))
-    
-    nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args,method='CG', options=opts)
-    
-    #In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
-    #and nnObjGradient. Check documentation for this function before you proceed.
-    #nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)
-    
-    # Print time - end training
-    print('\nEnding training. Time: ' + strftime("%Y-%m-%d %H:%M:%S", localtime()))
-    
-    #Reshape nnParams from 1D vector into w1 and w2 matrices
-    w1 = nn_params.x[0:n_hidden * (n_input + 1)].reshape( (n_hidden, (n_input + 1)))
-    w2 = nn_params.x[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
-    
-    
-    #Test the computed parameters
-    
-    predicted_label = nnPredict(w1,w2,train_data)
-    
-    #find the accuracy on Training Dataset
-    
-    print('\n Training set Accuracy:' + str(100*np.mean((predicted_label == train_label).astype(float))) + '%')
-    
-    predicted_label = nnPredict(w1,w2,validation_data)
-    
-    #find the accuracy on Validation Dataset
-    
-    print('\n Validation set Accuracy:' + str(100*np.mean((predicted_label == validation_label).astype(float))) + '%')
-    
-    
-    predicted_label = nnPredict(w1,w2,test_data)
-    
-    #find the accuracy on Validation Dataset
-    
-    print('\n Test set Accuracy:' + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
-    print('\n\n\n')
+# set the value of lambda
+lambdaval = np.float64(sys.argv[2])
+
+# set output file
+f = open(sys.argv[3],'a')
+
+f.write(str(n_hidden) + "\t" + str(lambdaval) + "\t")
+
+# initialize the weights into some random matrices
+initial_w1 = initializeWeights(n_input, n_hidden);
+initial_w2 = initializeWeights(n_hidden, n_class);
+
+# unroll 2 weight matrices into single column vector
+initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()),0)
+
+# Print training parameters
+#print('Training neural network with parameters: hidden nodes = ' + str(n_hidden) + ' lambda = ' + str(lambdaval))
+
+args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
+
+#Train Neural Network using fmin_cg or minimize from scipy,optimize module. Check documentation for a working example
+
+opts = {'maxiter' : 50}    # Preferred value.
+
+# Print time - begin training
+#print('\nBeginning training. Time: ' + strftime("%Y-%m-%d %H:%M:%S", localtime()))
+f.write(strftime("%Y-%m-%d %H:%M:%S", localtime()) + "\t")
+
+
+nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args,method='CG', options=opts)
+
+#In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
+#and nnObjGradient. Check documentation for this function before you proceed.
+#nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)
+
+# Print time - end training
+#print('\nEnding training. Time: ' + strftime("%Y-%m-%d %H:%M:%S", localtime()))
+f.write(strftime("%Y-%m-%d %H:%M:%S", localtime()) + "\t")
+
+#Reshape nnParams from 1D vector into w1 and w2 matrices
+w1 = nn_params.x[0:n_hidden * (n_input + 1)].reshape( (n_hidden, (n_input + 1)))
+w2 = nn_params.x[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
+
+
+#Test the computed parameters
+
+predicted_label = nnPredict(w1,w2,train_data)
+
+#find the accuracy on Training Dataset
+
+print('\n Training set Accuracy:' + str(100*np.mean((predicted_label == train_label).astype(float))) + '%')
+f.write(str(100*np.mean((predicted_label == train_label).astype(float))) + "\t")
+
+predicted_label = nnPredict(w1,w2,validation_data)
+
+#find the accuracy on Validation Dataset
+
+print('\n Validation set Accuracy:' + str(100*np.mean((predicted_label == validation_label).astype(float))) + '%')
+f.write(str(100*np.mean((predicted_label == validation_label).astype(float))) + "\t")
+
+predicted_label = nnPredict(w1,w2,test_data)
+
+#find the accuracy on Validation Dataset
+
+print('\n Test set Accuracy:' + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
+f.write(str(100*np.mean((predicted_label == test_label).astype(float))) + "\n")
+
+f.close()
