@@ -166,4 +166,22 @@ training_label = np.array([0,1])
 lambdaval = 0
 params = np.linspace(-5,5, num=26)
 
-print nnObjFunction(params, n_input, n_hidden, n_class, training_data, training_label, lambdaval)
+obj_val, obj_grad = nnObjFunction(params, n_input, n_hidden, n_class, training_data, training_label, lambdaval)
+
+print obj_val
+print obj_grad
+
+# Pickle tests below this line
+import pickle
+
+opts = {'maxiter' : 100}
+args = (n_input, n_hidden, n_class, training_data, training_label, lambdaval)
+nn_params = minimize(nnObjFunction, params, jac=True, args=args,method='CG', options=opts)
+    
+#Reshape nnParams from 1D vector into w1 and w2 matrices
+w1 = nn_params.x[0:n_hidden * (n_input + 1)].reshape( (n_hidden, (n_input + 1)))
+w2 = nn_params.x[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
+
+pickle_name = str(n_hidden) + "hidden_" + str(lambdaval) + "lambda.pickle"
+pickle.dump((n_hidden, w1, w2, lambdaval), open(pickle_name, "wb"))
+print pickle.load(open(pickle_name, "rb"))
