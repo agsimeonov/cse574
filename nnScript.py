@@ -4,6 +4,7 @@ from scipy.io import loadmat
 from math import sqrt
 from time import strftime, localtime
 import sys
+import pickle
 
 def perceptron(weights, example):
     '''
@@ -291,7 +292,12 @@ n_hidden = int(sys.argv[1]);
 # set the number of nodes in output unit
 n_class = 10;				   
 
-for lambdaval in np.arange(0.0,1.1,0.1):
+if len(sys.argv) == 2:
+    lambda_range = (0.0,1.1,0.1)
+else:
+    lambda_range = (float(sys.argv[2]),1.1,2.0)    
+
+for lambdaval in np.arange(*lambda_range):
     # initialize the weights into some random matrices
     initial_w1 = initializeWeights(n_input, n_hidden);
     initial_w2 = initializeWeights(n_hidden, n_class);
@@ -349,3 +355,6 @@ for lambdaval in np.arange(0.0,1.1,0.1):
     
     print('\n Test set Accuracy:' + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
     print('\n\n\n')
+    
+    pickle_name = str(n_hidden) + "hidden_" + str(lambdaval) + "lambda.pickle"
+    pickle.dump((n_hidden, w1, w2, lambdaval), open(pickle_name, "wb"))
