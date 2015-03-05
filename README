@@ -1,0 +1,19 @@
+Supporting Functions:
+================================================================================
+perceptron(weights, example):
+This function handles the output of a layer of perceptrons (hidden/output layer)
+and is used as helper for the feed_foward algorithm function.
+A single output is = sigmoid(linear combination of input attributes).
+weights : matrix of weights, size m x d+1
+weights(i,j) : weight from feature j to unit i
+example : vector of attributes, size d
+returns layer output
+
+feed_forward(21, w2, example):
+This function computes the output of the feed forward algorithm for both
+hidden and output layer. Used as helper for nnPredict and nnObjFunction.
+w1 : matrix of weights, size m x d+1
+w2 : matrix of weights, size k x d+1
+weights(i,j) : weight from feature j to unit i
+example : vector of attributes, size d
+returns tuple (output_hidden, output)
