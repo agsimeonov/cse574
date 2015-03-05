@@ -17,3 +17,8 @@ w2 : matrix of weights, size k x d+1
 weights(i,j) : weight from feature j to unit i
 example : vector of attributes, size d
 returns tuple (output_hidden, output)
+
+params.pickle:
+================================================================================
+If you want to read from the params.pickle file it contains the following tuple:
+(n_hidden, w1, w2, lambda)
