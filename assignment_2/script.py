@@ -55,18 +55,30 @@ def qdaTest(means,covmats,Xtest,ytest):
     acc = None
     return acc
 
+def squareSum(X, y, w):
+    # Calculates square root of sum section of squared loss and root mean squared error
+    N = X.shape[0]
+    squaredSum = None
+    for i in range(0, N):
+        loss = np.square(y[i] - np.transpose(w) * X[i])
+        squaredSum = loss if squaredSum is None else squaredSum + loss
+    return np.sqrt(squaredSum)
+
 def learnOLERegression(X,y):
     # Inputs:
     # X = N x d
     # y = N x 1
     # Output:
     # w = d x 1
+
     # IMPLEMENT THIS METHOD
 
     # Pseudo-Inverse
     pseudoInverse = np.linalg.pinv(X)
     # Maximum likelihood estimate
     w = np.dot(pseudoInverse, y)
+    # Minimize squared loss
+    w = .5 * squareSum(X, y, w)
 
     return w
 
@@ -90,7 +102,10 @@ def testOLERegression(w,Xtest,ytest):
     # rmse
 
     # IMPLEMENT THIS METHOD
-    rmse = None
+    
+    # Calculate the root mean squared error
+    rmse = (1.0/Xtest.shape[0]) * squareSum(Xtest, ytest, w)
+    
     return rmse
 
 def regressionObjVal(w, X, y, lambd):
