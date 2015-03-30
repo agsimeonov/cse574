@@ -62,7 +62,12 @@ def learnOLERegression(X,y):
     # Output:
     # w = d x 1
     # IMPLEMENT THIS METHOD
-    w = None
+
+    # Pseudo-Inverse
+    pseudoInverse = np.linalg.pinv(X)
+    # Maximum likelihood estimate
+    w = np.dot(pseudoInverse, y)
+
     return w
 
 def learnRidgeRegression(X,y,lambd):
