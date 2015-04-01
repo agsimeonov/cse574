@@ -62,11 +62,10 @@ def squaredSum(X, y, w):
     # y = N x 1
     # w = d x 1
     # Output:
-    # squaredSum = d x 1
-    squaredSum = None
+    # squaredSum = 1 x 1
+    squaredSum = 0
     for i in range(0, X.shape[0]):
-        loss = np.square(y[i] - w.T * X[i,:])
-        squaredSum = loss if squaredSum is None else squaredSum + loss
+        squaredSum += np.square(y[i] - np.dot(w.T, X[1,:]))
     return squaredSum
 
 def learnOLERegression(X,y):
@@ -82,8 +81,6 @@ def learnOLERegression(X,y):
     pseudoInverse = np.linalg.pinv(X)
     # Maximum likelihood estimate
     w = np.dot(pseudoInverse, y)
-    # Minimize squared loss
-    w = .5 * np.sqrt(squaredSum(X, y, w))
 
     return w
 
@@ -102,8 +99,6 @@ def learnRidgeRegression(X,y,lambd):
     w = np.linalg.inv(w)
     w = np.dot(w, X.T)
     w = np.dot(w, y)
-    # Minimize regularized squared loss
-    w = (1.0/(2 * X.shape[0])) * squaredSum(X, y, w) + (.5 * lambd * np.dot(w.T, w))
     
     return w
 
@@ -116,10 +111,10 @@ def testOLERegression(w,Xtest,ytest):
     # rmse
 
     # IMPLEMENT THIS METHOD
-    
+
     # Calculate the root mean squared error
-    rmse = np.mean(np.sqrt(squaredSum(Xtest, ytest, w)))
-    
+    rmse = (1.0/X.shape[0]) * np.sqrt(squaredSum(Xtest, ytest, w))
+
     return rmse
 
 def regressionObjVal(w, X, y, lambd):
