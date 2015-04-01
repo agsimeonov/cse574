@@ -56,18 +56,18 @@ def qdaTest(means,covmats,Xtest,ytest):
     return acc
 
 def squaredSum(X, y, w):
-    # Calculates the square root of squared sum section for squared loss and root mean squared error
+    # Calculates squared sum section for squared loss and root mean squared error
     # Inputs:
     # X = N x d
     # y = N x 1
     # w = d x 1
     # Output:
-    # np.sqrt(squaredSum) = d x 1
+    # squaredSum = d x 1
     squaredSum = None
     for i in range(0, X.shape[0]):
-        loss = np.square(y[i] - np.transpose(w) * X[i])
+        loss = np.square(y[i] - w.T * X[i,:])
         squaredSum = loss if squaredSum is None else squaredSum + loss
-    return np.sqrt(squaredSum)
+    return squaredSum
 
 def learnOLERegression(X,y):
     # Inputs:
@@ -83,7 +83,7 @@ def learnOLERegression(X,y):
     # Maximum likelihood estimate
     w = np.dot(pseudoInverse, y)
     # Minimize squared loss
-    w = .5 * squaredSum(X, y, w)
+    w = .5 * np.sqrt(squaredSum(X, y, w))
 
     return w
 
@@ -96,6 +96,15 @@ def learnRidgeRegression(X,y,lambd):
     # w = d x 1
 
     # IMPLEMENT THIS METHOD
+    
+    # MAP Estimate
+    w = (lambd * np.identity(X.shape[1])) + np.dot(X.T, X)
+    w = np.linalg.inv(w)
+    w = np.dot(w, X.T)
+    w = np.dot(w, y)
+    # Minimize regularized squared loss
+    w = (1.0/(2 * X.shape[0])) * squaredSum(X, y, w) + (.5 * lambd * np.dot(w.T, w))
+    
     return w
 
 def testOLERegression(w,Xtest,ytest):
@@ -109,7 +118,7 @@ def testOLERegression(w,Xtest,ytest):
     # IMPLEMENT THIS METHOD
     
     # Calculate the root mean squared error
-    rmse = (1.0/Xtest.shape[0]) * squaredSum(Xtest, ytest, w)
+    rmse = np.mean(np.sqrt(squaredSum(Xtest, ytest, w)))
     
     return rmse
 
