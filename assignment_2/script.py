@@ -95,7 +95,7 @@ def learnRidgeRegression(X,y,lambd):
     # IMPLEMENT THIS METHOD
     
     # MAP Estimate
-    w = (lambd * np.identity(X.shape[1])) + np.dot(X.T, X)
+    w = (2 * lambd * np.identity(X.shape[1])) + (X.shape[0] * np.dot(X.T, X))
     w = np.linalg.inv(w)
     w = np.dot(w, X.T)
     w = np.dot(w, y)
