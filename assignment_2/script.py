@@ -75,8 +75,6 @@ def learnOLERegression(X,y):
     # Output:
     # w = d x 1
 
-    # IMPLEMENT THIS METHOD
-
     # Pseudo-Inverse
     pseudoInverse = np.linalg.pinv(X)
     # Maximum likelihood estimate
@@ -92,14 +90,12 @@ def learnRidgeRegression(X,y,lambd):
     # Output:
     # w = d x 1
 
-    # IMPLEMENT THIS METHOD
-    
     # MAP Estimate
-    w = (2 * lambd * np.identity(X.shape[1])) + (X.shape[0] * np.dot(X.T, X))
+    w = (X.shape[0] * lambd) + np.dot(X.T, X)
     w = np.linalg.inv(w)
     w = np.dot(w, X.T)
     w = np.dot(w, y)
-    
+
     return w
 
 def testOLERegression(w,Xtest,ytest):
@@ -110,15 +106,12 @@ def testOLERegression(w,Xtest,ytest):
     # Output:
     # rmse
 
-    # IMPLEMENT THIS METHOD
-
     # Calculate the root mean squared error
     rmse = (1.0/X.shape[0]) * np.sqrt(squaredSum(Xtest, ytest, w))
 
     return rmse
 
 def regressionObjVal(w, X, y, lambd):
-
     # compute squared error (scalar) and gradient of squared error with respect
     # to w (vector) for the given data X and y and the regularization parameter
     # lambda
@@ -141,7 +134,7 @@ def mapNonLinear(x,p):
 
 # Problem 1
 # load the sample data
-X,y,Xtest,ytest = pickle.load(open('sample.pickle','rb'))     
+X,y,Xtest,ytest = pickle.load(open('sample.pickle','rb'))
 
 # LDA
 means,covmat = ldaLearn(X,y)
