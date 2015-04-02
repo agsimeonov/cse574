@@ -105,8 +105,9 @@ def mapNonLinear(x,p):
     # p - integer (>= 0)
     # Outputs:
     # Xd - (N x (d+1))
-    # IMPLEMENT THIS METHOD
-    Xd = None
+    Xd = np.ones((x.shape[0], p + 1))
+    for i in range(1, p + 1):
+        Xd[:, i] = x ** i
     return Xd
 
 # Main script
