@@ -14,9 +14,20 @@ def ldaLearn(X,y):
     # Outputs
     # means - A d x k matrix containing learnt means for each of the k classes
     # covmat - A single d x d learnt covariance matrix 
-
-    # IMPLEMENT THIS METHOD
-    means, covmat = [None, None]
+    numClass = int(np.max(y))
+    d = np.shape(X)[1]
+    means = np.empty((d, numClass));
+    
+    covmat = np.zeros(d)
+    for i in range (1, numClass + 1):
+        c = np.where(y==i)[0]
+        trainData = X[c,:]
+        means[:, i-1] = np.mean(trainData, axis=0).transpose()
+        covmat = covmat + (np.shape(trainData)[0]-1) * np.cov(np.transpose(trainData))
+        
+    
+    covmat = (1.0/(np.shape(X)[0] - numClass)) * covmat;# - numClass)); 
+    
     return means,covmat
 
 def qdaLearn(X,y):
@@ -28,7 +39,17 @@ def qdaLearn(X,y):
     # means - A d x k matrix containing learnt means for each of the k classes
     # covmats - A list of k d x d learnt covariance matrices for each of the k classes
 
-    # IMPLEMENT THIS METHOD
+    numClass = int(np.max(y))
+    d = np.shape(X)[1]
+    means = np.empty((d, numClass));
+    
+    covmats = []
+    for i in range (1, numClass+1):
+        c = np.where(y==i)[0]
+        trainData = X[c,:]
+        means[:, i-1] = np.mean(trainData, axis=0).transpose()
+        covmats.append(np.cov(np.transpose(trainData)))
+    
     return means,covmats
 
 def ldaTest(means,covmat,Xtest,ytest):
@@ -38,9 +59,26 @@ def ldaTest(means,covmat,Xtest,ytest):
     # ytest - a N x 1 column vector indicating the labels for each test example
     # Outputs
     # acc - A scalar accuracy value
-
+    N = np.shape(Xtest)[0];
+    #d = np.shape(Xtest)[1];
+    classCount = np.shape(means)[1];
+    #normalize = 1/(np.power(2*np.pi, d/2)*np.power(np.linalg.det(covmat),1/2));
+    countCorrect = 0.0;
+    invCov = np.linalg.inv(covmat);
+    ytest = ytest.astype(int);
+    for i in range (1, N + 1):
+        pdf = 0;
+        classNum = 0;
+        testX = np.transpose(Xtest[i-1,:]);
+        for k in range (1, classCount+1):
+            result = np.exp((-1/2)*np.dot(np.dot(np.transpose(testX - means[:, k-1]),invCov),(testX - means[:, k-1])));
+            if (result > pdf):
+                classNum = k;
+                pdf = result;
+        if (classNum == ytest[i-1]):
+            countCorrect = countCorrect + 1;
+    acc = countCorrect/N;
     # IMPLEMENT THIS METHOD
-    acc = None
     return acc
 
 def qdaTest(means,covmats,Xtest,ytest):
@@ -49,10 +87,33 @@ def qdaTest(means,covmats,Xtest,ytest):
     # Xtest - a N x d matrix with each row corresponding to a test example
     # ytest - a N x 1 column vector indicating the labels for each test example
     # Outputs
-    # acc - A scalar accuracy value
-
+    # acc - A scalar accuray value
+    classCount = np.shape(means)[1];
+    normalizers = np.zeros(classCount);
+    for i in range (1, classCount+1):
+        d = np.shape(covmats[i-1])[0];
+        normalizers[i-1] = 1.0/(np.power(2*np.pi, d/2)*np.power(np.linalg.det(covmats[i-1]),1/2));
+        
+        covmats[i-1] = np.linalg.inv(covmats[i-1]);
+    N = np.shape(Xtest)[0];
+    #d = np.shape(Xtest)[1];
+    #normalize = 1/(np.power(2*np.pi, d/2)*np.power(np.linalg.det(covmat),1/2));
+    countCorrect = 0.0;
+    ytest = ytest.astype(int);
+    for i in range (1, N + 1):
+        pdf = 0;
+        classNum = 0;
+        testX = np.transpose(Xtest[i-1,:]);
+        for k in range (1, classCount+1):
+            invCov = covmats[k-1];
+            result = normalizers[k-1]*np.exp((-1/2)*np.dot(np.dot(np.transpose(testX - means[:, k-1]),invCov),(testX - means[:, k-1])));
+            if (result > pdf):
+                classNum = k;
+                pdf = result;
+        if (classNum == ytest[i-1]):
+            countCorrect = countCorrect + 1;
+    acc = countCorrect/N;
     # IMPLEMENT THIS METHOD
-    acc = None
     return acc
 
 def learnOLERegression(X,y):
@@ -120,8 +181,8 @@ means,covmat = ldaLearn(X,y)
 ldaacc = ldaTest(means,covmat,Xtest,ytest)
 print('LDA Accuracy = '+str(ldaacc))
 # QDA
-means,covmats = ldaLearn(X,y)
-qdaacc = ldaTest(means,covmats,Xtest,ytest)
+means,covmats = qdaLearn(X,y)
+qdaacc = qdaTest(means,covmats,Xtest,ytest)
 print('QDA Accuracy = '+str(qdaacc))
 
 # Problem 2
@@ -134,6 +195,7 @@ w = learnOLERegression(X,y)
 mle = testOLERegression(w,Xtest,ytest)
 
 w_i = learnOLERegression(X_i,y)
+#
 mle_i = testOLERegression(w_i,Xtest_i,ytest)
 
 print('RMSE without intercept '+str(mle))
