@@ -17,17 +17,17 @@ def ldaLearn(X,y):
     numClass = int(np.max(y))
     d = np.shape(X)[1]
     means = np.empty((d, numClass));
-    
+
     covmat = np.zeros(d)
     for i in range (1, numClass + 1):
         c = np.where(y==i)[0]
         trainData = X[c,:]
         means[:, i-1] = np.mean(trainData, axis=0).transpose()
         covmat = covmat + (np.shape(trainData)[0]-1) * np.cov(np.transpose(trainData))
-        
-    
-    covmat = (1.0/(np.shape(X)[0] - numClass)) * covmat;# - numClass)); 
-    
+
+
+    covmat = (1.0/(np.shape(X)[0] - numClass)) * covmat;# - numClass));
+
     return means,covmat
 
 def qdaLearn(X,y):
@@ -42,14 +42,14 @@ def qdaLearn(X,y):
     numClass = int(np.max(y))
     d = np.shape(X)[1]
     means = np.empty((d, numClass));
-    
+
     covmats = []
     for i in range (1, numClass+1):
         c = np.where(y==i)[0]
         trainData = X[c,:]
         means[:, i-1] = np.mean(trainData, axis=0).transpose()
         covmats.append(np.cov(np.transpose(trainData)))
-    
+
     return means,covmats
 
 def ldaTest(means,covmat,Xtest,ytest):
@@ -93,7 +93,7 @@ def qdaTest(means,covmats,Xtest,ytest):
     for i in range (1, classCount+1):
         d = np.shape(covmats[i-1])[0];
         normalizers[i-1] = 1.0/(np.power(2*np.pi, d/2)*np.power(np.linalg.det(covmats[i-1]),1/2));
-        
+
         covmats[i-1] = np.linalg.inv(covmats[i-1]);
     N = np.shape(Xtest)[0];
     #d = np.shape(Xtest)[1];
@@ -196,7 +196,6 @@ w = learnOLERegression(X,y)
 mle = testOLERegression(w,Xtest,ytest)
 
 w_i = learnOLERegression(X_i,y)
-#
 mle_i = testOLERegression(w_i,Xtest_i,ytest)
 
 print('RMSE without intercept '+str(mle))
