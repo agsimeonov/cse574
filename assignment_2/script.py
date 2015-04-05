@@ -136,10 +136,7 @@ def learnRidgeRegression(X,y,lambd):
     return w
 
 def squaredSum(w, X, y):
-    squaredSum = 0
-    for i in range(0, X.shape[0]):
-        squaredSum += np.square(y[i] - np.dot(w.T, X[1,:]))
-    return squaredSum
+    return np.dot(np.subtract(y, np.dot(X,w)).T, np.subtract(y, np.dot(X,w)))[0][0]
 
 def testOLERegression(w,Xtest,ytest):
     # Inputs:
@@ -149,7 +146,7 @@ def testOLERegression(w,Xtest,ytest):
     # Output:
     # rmse
     rmse = (1.0/X.shape[0]) * np.sqrt(squaredSum(w, Xtest, ytest))
-    return rmse[0]
+    return rmse
 
 def regressionObjVal(w, X, y, lambd):
     # compute squared error (scalar) and gradient of squared error with respect
