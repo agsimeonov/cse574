@@ -38,7 +38,6 @@ def qdaLearn(X,y):
     # Outputs
     # means - A d x k matrix containing learnt means for each of the k classes
     # covmats - A list of k d x d learnt covariance matrices for each of the k classes
-
     numClass = int(np.max(y))
     d = np.shape(X)[1]
     means = np.empty((d, numClass));
@@ -78,7 +77,6 @@ def ldaTest(means,covmat,Xtest,ytest):
         if (classNum == ytest[i-1]):
             countCorrect = countCorrect + 1;
     acc = countCorrect/N;
-    # IMPLEMENT THIS METHOD
     return acc
 
 def qdaTest(means,covmats,Xtest,ytest):
@@ -113,7 +111,6 @@ def qdaTest(means,covmats,Xtest,ytest):
         if (classNum == ytest[i-1]):
             countCorrect = countCorrect + 1;
     acc = countCorrect/N;
-    # IMPLEMENT THIS METHOD
     return acc
 
 def learnOLERegression(X,y):
@@ -138,6 +135,12 @@ def learnRidgeRegression(X,y,lambd):
     w = np.dot(w, y)
     return w
 
+def squaredSum(w, X, y):
+    squaredSum = 0
+    for i in range(0, X.shape[0]):
+        squaredSum += np.square(y[i] - np.dot(w.T, X[1,:]))
+    return squaredSum
+
 def testOLERegression(w,Xtest,ytest):
     # Inputs:
     # w = d x 1
@@ -145,11 +148,8 @@ def testOLERegression(w,Xtest,ytest):
     # ytest = X x 1
     # Output:
     # rmse
-    squaredSum = 0
-    for i in range(0, Xtest.shape[0]):
-        squaredSum += np.square(ytest[i] - np.dot(w.T, Xtest[1,:]))
-    rmse = (1.0/X.shape[0]) * np.sqrt(squaredSum)
-    return rmse
+    rmse = (1.0/X.shape[0]) * np.sqrt(squaredSum(w, Xtest, ytest))
+    return rmse[0]
 
 def regressionObjVal(w, X, y, lambd):
     # compute squared error (scalar) and gradient of squared error with respect
@@ -157,7 +157,8 @@ def regressionObjVal(w, X, y, lambd):
     # lambda
 
     # IMPLEMENT THIS METHOD
-    error, error_grad = [0, 0]
+    error = ((1.0/(2.0 * X.shape[0])) * squaredSum(w, X, y)) + (.5 * lambd * np.dot(w.T, w))
+    error_grad = 0
     return error, error_grad
 
 def mapNonLinear(x,p):
