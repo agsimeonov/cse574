@@ -153,7 +153,7 @@ def regressionObjVal(w, X, y, lambd):
     # to w (vector) for the given data X and y and the regularization parameter
     # lambda
     error = ((1.0/(2.0 * X.shape[0])) * squaredSum(w, X, y)) + (.5 * lambd * np.dot(w.T, w))
-    error_grad = np.add(np.add(np.dot(y.T, X), np.dot(w.T, np.dot(X.T, X))) / X.shape[0], lambd * w).flatten()
+    error_grad = ((((-1.0 * np.dot(y.T, X)) + (np.dot(w.T, np.dot(X.T, X)))) / X.shape[0]) + (lambd * w)).flatten()
     return error, error_grad
 
 def mapNonLinear(x,p):
