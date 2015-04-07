@@ -136,7 +136,10 @@ def learnRidgeRegression(X,y,lambd):
     return w
 
 def squaredSum(w, X, y):
-    return np.dot(np.subtract(y, np.dot(X,w)).T, np.subtract(y, np.dot(X,w)))[0][0]
+    squaredSum = 0
+    for i in range(0, X.shape[0]):
+        squaredSum += np.square(y[i] - np.dot(w.T, X[i,:]))
+    return squaredSum[0]
 
 def testOLERegression(w,Xtest,ytest):
     # Inputs:
@@ -145,7 +148,7 @@ def testOLERegression(w,Xtest,ytest):
     # ytest = X x 1
     # Output:
     # rmse
-    rmse = (1.0/X.shape[0]) * np.sqrt(squaredSum(w, Xtest, ytest))
+    rmse = (1.0/Xtest.shape[0]) * np.sqrt(squaredSum(w, Xtest, ytest))
     return rmse
 
 def regressionObjVal(w, X, y, lambd):
@@ -198,7 +201,7 @@ print('RMSE without intercept '+str(mle))
 print('RMSE with intercept '+str(mle_i))
 
 # Problem 3
-k = 21
+k = 101
 lambdas = np.linspace(0, 0.004, num=k)
 i = 0
 rmses3 = np.zeros((k,1))
@@ -209,8 +212,8 @@ for lambd in lambdas:
 plt.plot(lambdas,rmses3)
 
 # Problem 4
+k = 101
 lambdas = np.linspace(0, 0.004, num=k)
-k = 21
 i = 0
 rmses4 = np.zeros((k,1))
 opts = {'maxiter' : 100}    # Preferred value.
