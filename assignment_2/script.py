@@ -88,11 +88,12 @@ def qdaTest(means,covmats,Xtest,ytest):
     # acc - A scalar accuray value
     classCount = np.shape(means)[1];
     normalizers = np.zeros(classCount);
+    covmats_ = np.copy(covmats)
     for i in range (1, classCount+1):
-        d = np.shape(covmats[i-1])[0];
-        normalizers[i-1] = 1.0/(np.power(2*np.pi, d/2)*np.power(np.linalg.det(covmats[i-1]),1/2));
+        d = np.shape(covmats_[i-1])[0];
+        normalizers[i-1] = 1.0/(np.power(2*np.pi, d/2)*np.power(np.linalg.det(covmats_[i-1]),1/2));
 
-        covmats[i-1] = np.linalg.inv(covmats[i-1]);
+        covmats_[i-1] = np.linalg.inv(covmats_[i-1]);
     N = np.shape(Xtest)[0];
     #d = np.shape(Xtest)[1];
     #normalize = 1/(np.power(2*np.pi, d/2)*np.power(np.linalg.det(covmat),1/2));
@@ -103,7 +104,7 @@ def qdaTest(means,covmats,Xtest,ytest):
         classNum = 0;
         testX = np.transpose(Xtest[i-1,:]);
         for k in range (1, classCount+1):
-            invCov = covmats[k-1];
+            invCov = covmats_[k-1];
             result = normalizers[k-1]*np.exp((-1/2)*np.dot(np.dot(np.transpose(testX - means[:, k-1]),invCov),(testX - means[:, k-1])));
             if (result > pdf):
                 classNum = k;
@@ -137,7 +138,7 @@ def learnRidgeRegression(X,y,lambd):
 
 def squaredSum(w, X, y):
     w_ = w.reshape((w.shape[0],1))
-    return np.sum((y-np.dot(X,w_))**2)
+    return np.sum(np.square((y-np.dot(X,w_))))
 
 def testOLERegression(w,Xtest,ytest):
     # Inputs:
@@ -176,10 +177,14 @@ X,y,Xtest,ytest = pickle.load(open('sample.pickle','rb'))
 
 # LDA
 means,covmat = ldaLearn(X,y)
+ldcc = ldaTest(means,covmat,X,y)
+print('LDA Accuracy for training = '+str(ldcc))
 ldaacc = ldaTest(means,covmat,Xtest,ytest)
 print('LDA Accuracy = '+str(ldaacc))
 # QDA
 means,covmats = qdaLearn(X,y)
+qdcc = qdaTest(means,covmats,X,y)
+print('QDA Accuracy for training = '+str(qdcc))
 qdaacc = qdaTest(means,covmats,Xtest,ytest)
 print('QDA Accuracy = '+str(qdaacc))
 
