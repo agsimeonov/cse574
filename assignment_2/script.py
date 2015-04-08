@@ -136,10 +136,8 @@ def learnRidgeRegression(X,y,lambd):
     return w
 
 def squaredSum(w, X, y):
-    squaredSum = 0
-    for i in range(0, X.shape[0]):
-        squaredSum += np.square(y[i] - np.dot(w.T, X[i,:]))
-    return squaredSum[0]
+    w_ = w.reshape((w.shape[0],1))
+    return np.sum((y-np.dot(X,w_))**2)
 
 def testOLERegression(w,Xtest,ytest):
     # Inputs:
