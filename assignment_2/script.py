@@ -173,35 +173,35 @@ def mapNonLinear(x,p):
 
 # Problem 1
 # load the sample data
-X,y,Xtest,ytest = pickle.load(open('sample.pickle','rb'))
-
-# LDA
-means,covmat = ldaLearn(X,y)
-ldcc = ldaTest(means,covmat,X,y)
-print('LDA Accuracy for training = '+str(ldcc))
-ldaacc = ldaTest(means,covmat,Xtest,ytest)
-print('LDA Accuracy = '+str(ldaacc))
-# QDA
-means,covmats = qdaLearn(X,y)
-qdcc = qdaTest(means,covmats,X,y)
-print('QDA Accuracy for training = '+str(qdcc))
-qdaacc = qdaTest(means,covmats,Xtest,ytest)
-print('QDA Accuracy = '+str(qdaacc))
+# X,y,Xtest,ytest = pickle.load(open('sample.pickle','rb'))
+# 
+# # LDA
+# means,covmat = ldaLearn(X,y)
+# ldcc = ldaTest(means,covmat,X,y)
+# print('LDA Accuracy for training = '+str(ldcc))
+# ldaacc = ldaTest(means,covmat,Xtest,ytest)
+# print('LDA Accuracy = '+str(ldaacc))
+# # QDA
+# means,covmats = qdaLearn(X,y)
+# qdcc = qdaTest(means,covmats,X,y)
+# print('QDA Accuracy for training = '+str(qdcc))
+# qdaacc = qdaTest(means,covmats,Xtest,ytest)
+# print('QDA Accuracy = '+str(qdaacc))
 
 # Problem 2
 X,y,Xtest,ytest = pickle.load(open('diabetes.pickle','rb'))
 # add intercept
 X_i = np.concatenate((np.ones((X.shape[0],1)), X), axis=1)
 Xtest_i = np.concatenate((np.ones((Xtest.shape[0],1)), Xtest), axis=1)
-
-w = learnOLERegression(X,y)
-mle = testOLERegression(w,Xtest,ytest)
-
-w_i = learnOLERegression(X_i,y)
-mle_i = testOLERegression(w_i,Xtest_i,ytest)
-
-print('RMSE without intercept '+str(mle))
-print('RMSE with intercept '+str(mle_i))
+#  
+# w = learnOLERegression(X,y)
+# mle = testOLERegression(w,Xtest,ytest)
+#  
+# w_i = learnOLERegression(X_i,y)
+# mle_i = testOLERegression(w_i,Xtest_i,ytest)
+#  
+# print('RMSE without intercept '+str(mle))
+# print('RMSE with intercept '+str(mle_i))
 
 # Problem 3
 k = 101
@@ -211,36 +211,50 @@ rmses3 = np.zeros((k,1))
 for lambd in lambdas:
     w_l = learnRidgeRegression(X_i,y,lambd)
     rmses3[i] = testOLERegression(w_l,Xtest_i,ytest)
+    print rmses3[i][0]
     i = i + 1
 plt.plot(lambdas,rmses3)
 
-# Problem 4
 k = 101
 lambdas = np.linspace(0, 0.004, num=k)
 i = 0
 rmses4 = np.zeros((k,1))
-opts = {'maxiter' : 100}    # Preferred value.
-w_init = np.zeros((X_i.shape[1],1))
 for lambd in lambdas:
-    args = (X_i, y, lambd)
-    w_l = minimize(regressionObjVal, w_init, jac=True, args=args,method='CG', options=opts)
-    w_l_1 = np.zeros((X_i.shape[1],1))
-    for j in range(len(w_l.x)):
-        w_l_1[j] = w_l.x[j]
-    rmses4[i] = testOLERegression(w_l_1,Xtest_i,ytest)    
+    w_l = learnRidgeRegression(X_i,y,lambd)
+    rmses4[i] = testOLERegression(w_l,X_i,y)
     i = i + 1
 plt.plot(lambdas,rmses4)
+plt.legend(('Testing RMSE','Training RMSE'))
+plt.show()
+
+
+# Problem 4
+# k = 101
+# lambdas = np.linspace(0, 0.004, num=k)
+# i = 0
+# rmses4 = np.zeros((k,1))
+# opts = {'maxiter' : 100}    # Preferred value.
+# w_init = np.zeros((X_i.shape[1],1))
+# for lambd in lambdas:
+#     args = (X_i, y, lambd)
+#     w_l = minimize(regressionObjVal, w_init, jac=True, args=args,method='CG', options=opts)
+#     w_l_1 = np.zeros((X_i.shape[1],1))
+#     for j in range(len(w_l.x)):
+#         w_l_1[j] = w_l.x[j]
+#     rmses4[i] = testOLERegression(w_l_1,Xtest_i,ytest)    
+#     i = i + 1
+# plt.plot(lambdas,rmses4)
 
 # Problem 5
-pmax = 7
-lambda_opt = lambdas[np.argmin(rmses4)]
-rmses5 = np.zeros((pmax,2))
-for p in range(pmax):
-    Xd = mapNonLinear(X[:,2],p)
-    Xdtest = mapNonLinear(Xtest[:,2],p)
-    w_d1 = learnRidgeRegression(Xd,y,0)
-    rmses5[p,0] = testOLERegression(w_d1,Xdtest,ytest)
-    w_d2 = learnRidgeRegression(Xd,y,lambda_opt)
-    rmses5[p,1] = testOLERegression(w_d2,Xdtest,ytest)
-plt.plot(range(pmax),rmses5)
-plt.legend(('No Regularization','Regularization'))
+# pmax = 7
+# lambda_opt = lambdas[np.argmin(rmses4)]
+# rmses5 = np.zeros((pmax,2))
+# for p in range(pmax):
+#     Xd = mapNonLinear(X[:,2],p)
+#     Xdtest = mapNonLinear(Xtest[:,2],p)
+#     w_d1 = learnRidgeRegression(Xd,y,0)
+#     rmses5[p,0] = testOLERegression(w_d1,Xdtest,ytest)
+#     w_d2 = learnRidgeRegression(Xd,y,lambda_opt)
+#     rmses5[p,1] = testOLERegression(w_d2,Xdtest,ytest)
+# plt.plot(range(pmax),rmses5)
+# plt.legend(('No Regularization','Regularization'))
