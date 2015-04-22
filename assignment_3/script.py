@@ -93,7 +93,16 @@ def preprocess():
 
 def sigmoid(z):
     return 1.0/(1.0 + np.exp(-z));
-    
+
+def getX(data):
+    return np.hstack((np.ones((data.shape[0], 1)), data))
+
+def getY(W, data):
+    return sigmoid(np.dot(getX(data), W))
+
+def unflatten(y):
+    return np.reshape(y, (y.shape[0], 1))
+
 def blrObjFunction(params, *args):
     """
     blrObjFunction computes 2-class Logistic Regression error function and
@@ -110,14 +119,11 @@ def blrObjFunction(params, *args):
         error_grad: the vector of size (D+1) x 1 representing the gradient of
                     error function
     """
-    n_data = train_data.shape[0];
-    n_feature = train_data.shape[1];
-    error = 0;
-    error_grad = np.zeros((n_feature+1,1));
-    
-    ##################
-    # YOUR CODE HERE #
-    ##################
+    data = args[0]
+    t = args[1]
+    y = unflatten(getY(params, data))
+    error = -1.0 * np.sum((t * np.log(y)) + ((1.0 - t) * np.log(1.0 -y)))
+    error_grad = np.dot(getX(data).T, (y - t)).flatten()
     
     return error, error_grad
 
@@ -136,15 +142,7 @@ def blrPredict(W, data):
          corresponding feature vector given in data matrix
 
     """
-#     label = np.zeros((data.shape[0],1));
-    
-    ##################
-    # YOUR CODE HERE #
-    ##################
-    bias = np.ones((data.shape[0], 1))
-    X = np.hstack((bias, data))
-    label = np.amax(sigmoid(np.dot(X, W)), axis=1)
-    label = np.reshape(label, (data.shape[0],1))
+    label = unflatten(np.amax(getY(W,data), axis=1))
 
     return label
 
