@@ -136,11 +136,15 @@ def blrPredict(W, data):
          corresponding feature vector given in data matrix
 
     """
-    label = np.zeros((data.shape[0],1));
+#     label = np.zeros((data.shape[0],1));
     
     ##################
     # YOUR CODE HERE #
     ##################
+    bias = np.ones((data.shape[0], 1))
+    X = np.hstack((bias, data))
+    label = np.amax(sigmoid(np.dot(X, W)), axis=1)
+    label = np.reshape(label, (data.shape[0],1))
 
     return label
 
