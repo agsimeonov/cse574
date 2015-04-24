@@ -123,7 +123,6 @@ def blrObjFunction(params, *args):
     t = args[1]
     y = unflatten(getY(params, data))
     error = -1.0 * np.sum((t * np.log(y)) + ((1.0 - t) * np.log(1.0 -y)))
-    print(error)
     error_grad = np.dot(getX(data).T, (y - t)).flatten()
     
     return error, error_grad
@@ -144,6 +143,8 @@ def blrPredict(W, data):
 
     """
     label = unflatten(np.amax(getY(W,data), axis=1))
+    print label
+    print getY(W,data)
 
     return label
 
