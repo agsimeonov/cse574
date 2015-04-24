@@ -98,8 +98,7 @@ def getX(data):
     return np.hstack((np.ones((data.shape[0], 1)), data))
 
 def getY(W, data):
-    print np.dot(getX(data), unflatten(W)).shape
-    return sigmoid(np.dot(getX(data)/1000, W))
+    return sigmoid(np.dot(getX(data), W))
 
 def unflatten(y):
     return np.reshape(y, (y.shape[0], 1))
@@ -123,9 +122,9 @@ def blrObjFunction(params, *args):
     data = args[0]
     t = args[1]
     y = unflatten(getY(params, data))
-    error = -1.0 * (np.sum((t * np.log(y)) + ((1.0 - t) * np.log(1.0 -y))))
-    error_grad = np.dot(getX(data).T, (y - t)).flatten()
+    error = -1.0 * np.sum((t * np.log(y)) + ((1.0 - t) * np.log(1.0 -y)))
     print error
+    error_grad = np.dot(getX(data).T, (y - t)).flatten()
     
     return error, error_grad
 
@@ -197,5 +196,4 @@ print('\n\n--------------SVM-------------------\n\n')
 ##################
 # YOUR CODE HERE #
 ##################
-from sklearn.svm import SVC
 
