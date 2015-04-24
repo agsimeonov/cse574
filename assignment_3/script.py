@@ -143,8 +143,8 @@ def blrPredict(W, data):
 
     """
     label = unflatten(np.amax(getY(W,data), axis=1))
-    print label
-    print getY(W,data)
+    print(label)
+    print(getY(W,data))
 
     return label
 
