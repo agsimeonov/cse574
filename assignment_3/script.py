@@ -123,7 +123,7 @@ def blrObjFunction(params, *args):
     t = args[1]
     y = unflatten(getY(params, data))
     error = -1.0 * np.sum((t * np.log(y)) + ((1.0 - t) * np.log(1.0 -y)))
-    print error
+    print(error)
     error_grad = np.dot(getX(data).T, (y - t)).flatten()
     
     return error, error_grad
