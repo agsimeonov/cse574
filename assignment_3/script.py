@@ -2,6 +2,8 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
+import sys
+import pickle
 
 def preprocess():
     """ 
@@ -110,15 +112,27 @@ def blrObjFunction(params, *args):
         error_grad: the vector of size (D+1) x 1 representing the gradient of
                     error function
     """
+    train_data, labeli = args   # training data and true labels
+    
     n_data = train_data.shape[0];
     n_feature = train_data.shape[1];
     error = 0;
     error_grad = np.zeros((n_feature+1,1));
     
+    w = params.reshape((n_feature+1,1))   # weights
+    
     ##################
     # YOUR CODE HERE #
     ##################
-    
+    x = np.hstack((np.ones((n_data,1)),train_data))
+    y = sigmoid(np.dot(x,w))
+
+    error = labeli * np.log(y) + (1.0 - labeli) * np.log(1.0 - y)
+    error = -np.sum(error)
+
+    error_grad = (y - labeli) * x
+    error_grad = np.sum(error_grad, axis=0)
+
     return error, error_grad
 
 def blrPredict(W, data):
@@ -136,11 +150,20 @@ def blrPredict(W, data):
          corresponding feature vector given in data matrix
 
     """
-    label = np.zeros((data.shape[0],1));
+    n_data = data.shape[0];
+    n_feature = data.shape[1];
+    
+    label = np.zeros((n_data,1));   # each column is class prob
+    
     
     ##################
     # YOUR CODE HERE #
     ##################
+    x = np.hstack((np.ones((n_data, 1)),data))
+
+    label = sigmoid(np.dot(x, W))   # compute probabilities
+    label = np.argmax(label, axis=1)    # get maximum for each class
+    label = label.reshape((n_data,1))
 
     return label
 
@@ -162,7 +185,7 @@ n_feature = train_data.shape[1];
 T = np.zeros((n_train, n_class));
 for i in range(n_class):
     T[:,i] = (train_label == i).astype(int).ravel();
-    
+
 # Logistic Regression with Gradient Descent
 W = np.zeros((n_feature+1, n_class));
 initialWeights = np.zeros((n_feature+1,1));
@@ -172,6 +195,9 @@ for i in range(n_class):
     args = (train_data, labeli);
     nn_params = minimize(blrObjFunction, initialWeights, jac=True, args=args,method='CG', options=opts)
     W[:,i] = nn_params.x.reshape((n_feature+1,));
+
+pickle.dump(W,open("params.pickle","wb"))
+#W = pickle.load(open('params.pickle','rb'))
 
 # Find the accuracy on Training Dataset
 predicted_label = blrPredict(W, train_data);
