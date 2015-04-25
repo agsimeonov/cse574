@@ -88,7 +88,6 @@ def preprocess():
     train_data = train_data/255.0;
     validation_data = validation_data/255.0;
     test_data = test_data/255.0;
-    
     return train_data, train_label, validation_data, validation_label, test_data, test_label
 
 def sigmoid(z):
@@ -110,15 +109,21 @@ def blrObjFunction(params, *args):
         error_grad: the vector of size (D+1) x 1 representing the gradient of
                     error function
     """
+    train_data, labeli = args;
     n_data = train_data.shape[0];
-    n_feature = train_data.shape[1];
-    error = 0;
-    error_grad = np.zeros((n_feature+1,1));
+    n_feature = np.shape(train_data)[1];
     
+    w = params.reshape((n_feature+1,1));
+    train_data = np.hstack((np.ones((n_data, 1)), train_data)); """ adding the bias term """
+    
+    labels_calculated = sigmoid(np.dot(w.transpose(), train_data.transpose()));
+    error = -1 * (np.dot(np.log(labels_calculated),labeli)+np.dot(np.log(1.0-labels_calculated),1.0-labeli)); """ equation 2"""
+    error_grad = np.dot(train_data.transpose(), labels_calculated.transpose() - labeli).flatten(); """ equation 3"""
+    
+    #error_grad = np.zeros((716,1));
     ##################
     # YOUR CODE HERE #
     ##################
-    
     return error, error_grad
 
 def blrPredict(W, data):
@@ -136,7 +141,11 @@ def blrPredict(W, data):
          corresponding feature vector given in data matrix
 
     """
-    label = np.zeros((data.shape[0],1));
+    n_train = np.shape(data)[0];
+    data = np.hstack((np.ones((n_train,1)), data));
+    results = sigmoid(np.dot(W.transpose(), data.transpose()));
+    label = np.argmax(results, axis=0);
+    print(label);
     
     ##################
     # YOUR CODE HERE #
@@ -168,6 +177,7 @@ W = np.zeros((n_feature+1, n_class));
 initialWeights = np.zeros((n_feature+1,1));
 opts = {'maxiter' : 50};
 for i in range(n_class):
+    print(i);
     labeli = T[:,i].reshape(n_train,1);
     args = (train_data, labeli);
     nn_params = minimize(blrObjFunction, initialWeights, jac=True, args=args,method='CG', options=opts)
