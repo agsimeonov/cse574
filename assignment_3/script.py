@@ -142,7 +142,7 @@ def blrPredict(W, data):
          corresponding feature vector given in data matrix
 
     """
-    label = unflatten(np.amax(getY(W,data), axis=1))
+    label = unflatten(np.argmax(getY(W,data), axis=1))
 
     return label
 
