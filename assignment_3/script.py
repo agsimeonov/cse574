@@ -2,6 +2,7 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
+from sklearn.svm import SVC
 
 def preprocess():
     """ 
@@ -176,7 +177,7 @@ for i in range(n_class):
 W = np.zeros((n_feature+1, n_class));
 initialWeights = np.zeros((n_feature+1,1));
 opts = {'maxiter' : 50};
-for i in range(n_class):
+"""for i in range(n_class):
     print(i);
     labeli = T[:,i].reshape(n_train,1);
     args = (train_data, labeli);
@@ -194,7 +195,7 @@ print('\n Validation set Accuracy:' + str(100*np.mean((predicted_label == valida
 # Find the accuracy on Testing Dataset
 predicted_label = blrPredict(W, test_data);
 print('\n Testing set Accuracy:' + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
-
+"""
 """
 Script for Support Vector Machine
 """
@@ -203,4 +204,67 @@ print('\n\n--------------SVM-------------------\n\n')
 ##################
 # YOUR CODE HERE #
 ##################
+""" case 1 """
 
+clf = SVC(C=1.0, kernel='linear', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None);
+clf.fit(train_data, train_label.flatten());
+# Find the accuracy on Training Dataset
+predicted_label = clf.predict(train_data);
+print('\n Training set Accuracy:' + str(100*np.mean((predicted_label == train_label).astype(float))) + '%')
+
+# Find the accuracy on Validation Dataset
+predicted_label = clf.predict(validation_data);
+print('\n Validation set Accuracy:' + str(100*np.mean((predicted_label == validation_label).astype(float))) + '%')
+
+# Find the accuracy on Testing Dataset
+predicted_label = clf.predict(test_data);
+print('\n Testing set Accuracy:' + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
+
+""" case 2 """
+
+clf = SVC(C=1.0, kernel='rbf', degree=3, gamma=1.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None);
+clf.fit(train_data, train_label.flatten());
+# Find the accuracy on Training Dataset
+predicted_label = clf.predict(train_data);
+print('\n Training set Accuracy:' + str(100*np.mean((predicted_label == train_label).astype(float))) + '%')
+
+# Find the accuracy on Validation Dataset
+predicted_label = clf.predict(validation_data);
+print('\n Validation set Accuracy:' + str(100*np.mean((predicted_label == validation_label).astype(float))) + '%')
+
+# Find the accuracy on Testing Dataset
+predicted_label = clf.predict(test_data);
+print('\n Testing set Accuracy:' + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
+
+""" case 3 """
+
+clf = SVC(C=1.0, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None);
+clf.fit(train_data, train_label.flatten());
+# Find the accuracy on Training Dataset
+predicted_label = clf.predict(train_data);
+print('\n Training set Accuracy:' + str(100*np.mean((predicted_label == train_label).astype(float))) + '%')
+
+# Find the accuracy on Validation Dataset
+predicted_label = clf.predict(validation_data);
+print('\n Validation set Accuracy:' + str(100*np.mean((predicted_label == validation_label).astype(float))) + '%')
+
+# Find the accuracy on Testing Dataset
+predicted_label = clf.predict(test_data);
+print('\n Testing set Accuracy:' + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
+
+""" case 4 """
+
+for i in [1.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]:
+    clf = SVC(C=i, kernel='rbf', degree=3, gamma=0.0, coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, random_state=None);
+    clf.fit(train_data, train_label.flatten());
+    # Find the accuracy on Training Dataset
+    predicted_label = clf.predict(train_data);
+    print('\n Training set Accuracy:' + str(100*np.mean((predicted_label == train_label).astype(float))) + '%')
+    
+    # Find the accuracy on Validation Dataset
+    predicted_label = clf.predict(validation_data);
+    print('\n Validation set Accuracy:' + str(100*np.mean((predicted_label == validation_label).astype(float))) + '%')
+    
+    # Find the accuracy on Testing Dataset
+    predicted_label = clf.predict(test_data);
+    print('\n Testing set Accuracy:' + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
