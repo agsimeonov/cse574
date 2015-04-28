@@ -2,8 +2,8 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
-import sys
 import pickle
+from sklearn.svm import SVC
 
 def preprocess():
     """ 
@@ -182,6 +182,7 @@ n_train = train_data.shape[0];
 # number of features
 n_feature = train_data.shape[1];
 
+
 T = np.zeros((n_train, n_class));
 for i in range(n_class):
     T[:,i] = (train_label == i).astype(int).ravel();
@@ -211,6 +212,7 @@ print('\n Validation set Accuracy:' + str(100*np.mean((predicted_label == valida
 predicted_label = blrPredict(W, test_data);
 print('\n Testing set Accuracy:' + str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
 
+
 """
 Script for Support Vector Machine
 """
@@ -220,3 +222,48 @@ print('\n\n--------------SVM-------------------\n\n')
 # YOUR CODE HERE #
 ##################
 
+# Linear kernel
+print('SVM with linear kernel')
+clf = SVC(kernel='linear')
+clf.fit(train_data, train_label.flatten())
+print('\n Training set Accuracy:' + str(100*clf.score(train_data, train_label)) + '%')
+print('\n Validation set Accuracy:' + str(100*clf.score(validation_data, validation_label)) + '%')
+print('\n Testing set Accuracy:' + str(100*clf.score(test_data, test_label)) + '%')
+
+
+# Radial basis function with gamma = 1
+print('\n\n SVM with radial basis function, gamma = 1')
+clf = SVC(kernel='rbf', gamma=1.0)
+clf.fit(train_data, train_label.flatten())
+print('\n Training set Accuracy:' + str(100*clf.score(train_data, train_label)) + '%')
+print('\n Validation set Accuracy:' + str(100*clf.score(validation_data, validation_label)) + '%')
+print('\n Testing set Accuracy:' + str(100*clf.score(test_data, test_label)) + '%')
+
+
+# Radial basis function with gamma = 0
+print('\n\n SVM with radial basis function, gamma = 0')
+clf = SVC(kernel='rbf')
+clf.fit(train_data, train_label.flatten())
+print('\n Training set Accuracy:' + str(100*clf.score(train_data, train_label)) + '%')
+print('\n Validation set Accuracy:' + str(100*clf.score(validation_data, validation_label)) + '%')
+print('\n Testing set Accuracy:' + str(100*clf.score(test_data, test_label)) + '%')
+
+
+# Radial basis function with C = 1, 10, 20 ... 100
+print('\n\n SVM with radial basis function, different values of C')
+train_accuracy = np.zeros(11)
+valid_accuracy = np.zeros(11)
+test_accuracy = np.zeros(11)
+C_val = np.zeros(11)
+C_val[0] = 1.0   # first value is 1
+C_val[1:] = [x for x in np.arange(10.0, 101.0, 10.0)]    # rest is 10, 20 ... 100
+### for every C, train and compute accuracy ###
+for i in range(11):
+    clf = SVC(C=C_val[i],kernel='rbf')
+    clf.fit(train_data, train_label.flatten())
+    train_accuracy[i] = 100*clf.score(train_data, train_label)
+    valid_accuracy[i] = 100*clf.score(validation_data, validation_label)
+    test_accuracy[i] = 100*clf.score(test_data, test_label)
+
+pickle.dump((train_accuracy, valid_accuracy, test_accuracy),open("rbf_accuracy.pickle","wb"))
+#(train_accuracy, valid_accuracy, test_accuracy) = pickle.load(open('rbf_accuracy.pickle','rb'))
