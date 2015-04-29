@@ -4,6 +4,7 @@ from scipy.io import loadmat
 from math import sqrt
 import pickle
 from sklearn.svm import SVC
+from pylab import *
 
 def preprocess():
     """ 
@@ -265,5 +266,19 @@ for i in range(11):
     valid_accuracy[i] = 100*clf.score(validation_data, validation_label)
     test_accuracy[i] = 100*clf.score(test_data, test_label)
 
-pickle.dump((train_accuracy, valid_accuracy, test_accuracy),open("rbf_accuracy.pickle","wb"))
-#(train_accuracy, valid_accuracy, test_accuracy) = pickle.load(open('rbf_accuracy.pickle','rb'))
+pickle.dump((train_accuracy, valid_accuracy, test_accuracy),open("rbf_cval.pickle","wb"))
+#(train_accuracy, valid_accuracy, test_accuracy) = pickle.load(open('rbf_cval.pickle','rb'))
+
+# Plot accuracy of SVM with rbf vs C values
+plot(C_val, train_accuracy, 'o-',
+    C_val, valid_accuracy,'o-',
+    C_val, test_accuracy, 'o-')
+
+xlabel('C values')
+ylabel('Accuracy (%)')
+title('Accuracy using SVM with Gaussian kernel and different values of C')
+legend(('Training','Validation','Test'), loc='lower right')
+grid(True)
+tight_layout()
+savefig("rbf_cval.png")
+show()
